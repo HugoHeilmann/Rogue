@@ -13,7 +13,7 @@ class Map:
         self.hero = hero
         self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
         self._elem = {hero: pos}
-        self._mat[self.pos.x][self.pos.y] = hero
+        self.put(pos, hero)
 
     def __len__(self) -> int:
         return len(self._mat)
@@ -36,3 +36,17 @@ class Map:
                 matrix += j
             matrix += "\n"
         return matrix
+
+    def get(self, c: Coord) -> str:
+        return self._mat[c.y][c.x]
+
+    def pos(self, e) -> Coord:
+        return self._elem[e]
+
+    def put(self, c: Coord, e) -> None:
+        self._mat[c.y][c.x] = e
+        self._elem[e] = c
+
+    def rm(self, c: Coord) -> None:
+        self._mat[c.y][c.x] = self.ground
+        del self._elem[self.get(c)]

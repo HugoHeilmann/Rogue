@@ -38,5 +38,29 @@ def test_contains():
 
 
 def test_str():
-    map = Map(3, Coord(0, 1))
-    assert str(map) == ".@.\n...\n...\n"
+    map = Map(3, pos=Coord(0, 1))
+    assert str(map) == "...\n@..\n...\n"
+
+
+def test_get():
+    assert Map().get(Coord(0, 4)) == "."
+    assert Map().get(Coord(1, 1)) == "@"
+    assert Map().get(Coord(2, 3)) == "."
+
+
+def test_pos():
+    map = Map()
+    coord = map.pos("@").x
+    assert Map().pos("@") == Coord(1, 1)
+    assert Map(pos=Coord(2, 3), hero="X").pos("X") == Coord(2, 3)
+
+
+"""
+def test_put():
+    print(Map().pos("@"))
+    m = Map()
+    m.put(Coord(3, 2), "X")
+    m.put(Coord(0, 0), "A")
+    assert str(m) == "A....\n.@...\n...X.\n.....\n.....\n"
+    assert m._elem == {"@": Coord(1, 1), "X": Coord(3, 2), "A": Coord(0, 0)}
+"""
