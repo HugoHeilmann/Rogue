@@ -16,6 +16,14 @@ def test_equals():
     assert (c1 == c3) == False
 
 
+def test_add():
+    c1 = Coord(3, 4)
+    c2 = Coord(-1, 2)
+    sum = c1 + c2
+    assert sum.x == 2
+    assert sum.y == 6
+
+
 def test_str():
     c1 = Coord(3, 4)
     c2 = Coord(0, 0)
