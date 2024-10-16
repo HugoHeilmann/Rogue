@@ -15,6 +15,9 @@ class Map:
         self._elem = {hero: pos}
         self._mat[self.pos.x][self.pos.y] = hero
 
+    def __len__(self) -> int:
+        return len(self._mat)
+
     def __repr__(self) -> str:
         matrix = ""
         for i in range(len(self._mat)):

@@ -16,6 +16,13 @@ def test_initialisation():
     assert map._elem["@"] == Coord(1, 1)
 
 
+def test_len():
+    map = Map()
+    assert len(map) == 5
+    map = Map(3)
+    assert len(map) == 3
+
+
 def test_str():
     map = Map(3, Coord(0, 1))
     assert str(map) == ".@.\n...\n...\n"
