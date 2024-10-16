@@ -23,6 +23,20 @@ def test_len():
     assert len(map) == 3
 
 
+def test_contains():
+    assert (Coord(0, 4) in Map()) == True
+    assert (Coord(0, 4) in Map(3)) == False
+    assert (Coord(0, 5) in Map()) == False
+    assert (Coord(-1, 3) in Map()) == False
+    assert (Coord(1, -1) in Map()) == False
+    assert (Coord(5, 2) in Map()) == False
+    assert (Coord(4, 4) in Map()) == True
+
+    assert ("@" in Map()) == True
+    assert ("X" in Map()) == False
+    assert ("X" in Map(pos=Coord(4, 4), hero="X")) == True
+
+
 def test_str():
     map = Map(3, Coord(0, 1))
     assert str(map) == ".@.\n...\n...\n"

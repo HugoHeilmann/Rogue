@@ -18,6 +18,17 @@ class Map:
     def __len__(self) -> int:
         return len(self._mat)
 
+    def __contains__(self, item) -> bool:
+        if isinstance(item, Coord):
+            return (
+                item.x >= 0
+                and item.x < len(self)
+                and item.y >= 0
+                and item.y < len(self)
+            )
+        else:
+            return item in self._elem
+
     def __repr__(self) -> str:
         matrix = ""
         for i in range(len(self._mat)):
