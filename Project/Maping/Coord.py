@@ -9,5 +9,5 @@ class Coord:
     def __add__(self, other: "Coord") -> "Coord":
         return Coord(self.x + other.x, self.y + other.y)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"<{self.x},{self.y}>"
