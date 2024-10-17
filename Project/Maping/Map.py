@@ -12,7 +12,7 @@ class Map:
         self.pos = pos
         self.hero = hero
         self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
-        self._elem = {hero: pos}
+        self._elem = {}
         self.put(pos, hero)
 
     def __len__(self) -> int:
@@ -20,12 +20,7 @@ class Map:
 
     def __contains__(self, item) -> bool:
         if isinstance(item, Coord):
-            return (
-                item.x >= 0
-                and item.x < len(self)
-                and item.y >= 0
-                and item.y < len(self)
-            )
+            return 0 <= item.x < len(self) and 0 <= item.y < len(self)
         else:
             return item in self._elem
 
@@ -40,7 +35,7 @@ class Map:
     def get(self, c: Coord) -> str:
         return self._mat[c.y][c.x]
 
-    def pos(self, e) -> Coord:
+    def get_pos(self, e) -> Coord:
         return self._elem[e]
 
     def put(self, c: Coord, e) -> None:
@@ -48,5 +43,13 @@ class Map:
         self._elem[e] = c
 
     def rm(self, c: Coord) -> None:
-        self._mat[c.y][c.x] = self.ground
-        del self._elem[self.get(c)]
+        elem = self.get(c)
+        if elem in self._elem:
+            self._mat[c.y][c.x] = self.ground
+            del self._elem[elem]
+
+    def move(self, e, way: Coord) -> None:
+        if self.get_pos(e) + way in self:
+            last_pos = self.get_pos(e)
+            self.rm(last_pos)
+            self.put((last_pos + way), e)
