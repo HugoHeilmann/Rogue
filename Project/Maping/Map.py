@@ -1,4 +1,4 @@
-from Project.Maping.Coord import Coord
+from .Coord import Coord
 
 
 class Map:
@@ -53,3 +53,28 @@ class Map:
             last_pos = self.get_pos(e)
             self.rm(last_pos)
             self.put((last_pos + way), e)
+
+    def play(self, hero="@"):
+        while True:
+            print(self)
+            self.move(hero, Map.dir[getch()])
+
+
+def getch():
+    try:
+        import sys
+        import termios
+        import tty
+
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+    except ImportError:
+        import msvcrt
+
+        return msvcrt.getch().decode("utf-8")
