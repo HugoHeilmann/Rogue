@@ -22,3 +22,8 @@ def test_initialisation():
 
 def test_heritage():
     assert isinstance(Creature("Goblin", 5), Element) == True
+
+
+def test_description():
+    assert Creature("Goblin", 9).description() == "<Goblin>(9)"
+    assert Creature("Snake", 2).description() == "<Snake>(2)"

@@ -6,3 +6,6 @@ class Creature(Element):
         Element.__init__(self, _name, _abbrv)
         self._hp = _hp
         self._strength = _strength
+
+    def description(self) -> str:
+        return super().description() + "(" + str(self._hp) + ")"

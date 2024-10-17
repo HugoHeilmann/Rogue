@@ -5,5 +5,8 @@ class Element:
         if self._abbrv == "":
             self._abbrv = self._name[0]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._abbrv
+
+    def description(self) -> str:
+        return f"<{self._name}>"

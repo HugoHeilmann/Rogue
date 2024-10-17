@@ -15,3 +15,8 @@ def test_initialisation():
     assert o._name == "gold"
     assert o._abbrv == "g"
     assert str(o) == "g"
+
+
+def test_description():
+    assert Element("sword").description() == "<sword>"
+    assert Element("Gold").description() == "<Gold>"
