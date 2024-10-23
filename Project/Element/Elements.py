@@ -25,6 +25,10 @@ class Creature(Element):
     def description(self) -> str:
         return super().description() + "(" + str(self._hp) + ")"
 
+    def meet(self, other: "Creature") -> bool:
+        self._hp -= other._strength
+        return self._hp <= 0
+
 
 class Hero(Creature):
     def __init__(
