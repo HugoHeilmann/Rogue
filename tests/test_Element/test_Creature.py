@@ -2,8 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from Project.Element.Creature import Creature
-from Project.Element.Element import Element
+from Project.Element.Elements import Creature, Element
 
 
 def test_initialisation():
