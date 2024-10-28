@@ -1,3 +1,5 @@
+from Project.Element.Elements import *
+
 from .Coord import Coord
 
 
@@ -6,11 +8,11 @@ class Map:
     dir = {"z": Coord(0, -1), "q": Coord(-1, 0), "s": Coord(0, 1), "d": Coord(1, 0)}
 
     def __init__(
-        self, size: int = 5, pos: Coord = Coord(1, 1), hero: str = "@"
+        self, size: int = 5, pos: Coord = Coord(1, 1), hero: Hero = Hero()
     ) -> None:
         self.size = size
         self.pos = pos
-        self.hero = hero
+        self._hero = hero
         self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
         self._elem = {}
         self.put(pos, hero)
@@ -28,19 +30,19 @@ class Map:
         matrix = ""
         for i in range(len(self._mat)):
             for j in self._mat[i]:
-                matrix += j
+                matrix += str(j)
             matrix += "\n"
         return matrix
 
     def get(self, c: Coord) -> str:
         return self._mat[c.y][c.x]
 
-    def get_pos(self, e) -> Coord:
+    def get_pos(self, e: Element) -> Coord:
         return self._elem[e]
 
-    def put(self, c: Coord, e) -> None:
-        self._mat[c.y][c.x] = e
-        self._elem[e] = c
+    def put(self, c: Coord, e: Element) -> None:
+        self._mat[c.y][c.x] = str(e)
+        self._elem[str(e)] = c
 
     def rm(self, c: Coord) -> None:
         elem = self.get(c)
@@ -48,13 +50,13 @@ class Map:
             self._mat[c.y][c.x] = self.ground
             del self._elem[elem]
 
-    def move(self, e, way: Coord) -> None:
+    def move(self, e: Element, way: Coord) -> None:
         if self.get_pos(e) + way in self:
             last_pos = self.get_pos(e)
             self.rm(last_pos)
             self.put((last_pos + way), e)
 
-    def play(self, hero="@"):
+    def play(self, hero=Hero()):
         while True:
             print(self)
             self.move(hero, Map.dir[getch()])
