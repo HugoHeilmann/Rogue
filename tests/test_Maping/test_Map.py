@@ -2,31 +2,29 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+import random
+
 from Project.Element.Elements import Element, Hero
 from Project.Maping.Coord import Coord
 from Project.Maping.Map import Map
 from Project.Maping.Room import Room
 
+random.seed(42)
+
 
 def test_initialisation():
-    map = Map(5)
+    h = Hero()
+    map = Map(5, hero=h)
     assert map.ground == "."
     assert map.empty == " "
     assert map.dir["z"] == Coord(0, -1)
     assert map.dir["q"] == Coord(-1, 0)
     assert map.dir["s"] == Coord(0, 1)
     assert map.dir["d"] == Coord(1, 0)
-    assert map._elem == {}
-    assert map._rooms == []
+    assert map._elem == {h: Coord(3, 1)}
+    assert str(map._rooms) == "[[<2,0>,<4,3>]]"
     assert map._roomsToReach == []
     assert len(map._mat) == 5
-    for i in range(len(map._mat)):
-        assert len(map._mat[i]) == 5
-
-    for i in range(5):
-        for j in range(5):
-            assert map._mat[j][i] == Map.empty
-    # assert map._elem[map._hero] == Coord(1, 1)
 
 
 def test_len():
@@ -47,45 +45,32 @@ def test_contains():
 
 
 def test_str():
-    map = Map(3, pos=Coord(0, 1))
-    map.put(map._pos, Hero())
-    assert str(map) == "   \n@  \n   \n"
+    map = Map(3)
+    assert str(map) == "...\n.@.\n...\n"
 
 
 def test_get():
     map = Map(5)
     map.put(Coord(1, 1), Hero())
-    assert map.get(Coord(0, 4)) == " "
+    assert map.get(Coord(0, 4)) == "."
     assert str(map.get(Coord(1, 1))) == "@"
-    assert map.get(Coord(2, 3)) == " "
+    assert map.get(Coord(2, 3)) == "."
 
 
 def test_pos():
-    map = Map(5, pos=Coord(1, 1))
     h = Hero()
-    map.put(map._pos, h)
-    assert map.get_pos(h) == Coord(1, 1)
+    map = Map(5, hero=h)
+    assert map.get_pos(h) == Coord(3, 2)
     h2 = Hero(_abbrv="X")
-    map = Map(pos=Coord(2, 3))
-    map.put(map._pos, h2)
-    assert map.get_pos(h2) == Coord(2, 3)
+    map = Map(hero=h2)
+    assert map.get_pos(h2) == Coord(8, 18)
 
 
 def test_put():
     m = Map(5)
     m.put(Coord(3, 2), "X")
-    m.put(Coord(0, 0), "A")
-    assert str(m) == "A    \n     \n   X \n     \n     \n"
-    assert m._elem == {"X": Coord(3, 2), "A": Coord(0, 0)}
-
-
-def test_addRoom():
-    m = Map(6)
-    m.addRoom(Room(Coord(1, 1), Coord(4, 3)))
-    assert str(m) == "      \n .... \n .... \n .... \n      \n      \n"
-    assert m._rooms == []
-    assert len(m._roomsToReach) == 1
-    assert str(m._roomsToReach[0]) == "[<1,1>,<4,3>]"
+    assert str(m) == "     \n     \n...X.\n..@..\n.....\n"
+    assert m._elem == {m._hero: Coord(2, 3), "X": Coord(3, 2)}
 
 
 def test_findRoom():
@@ -111,118 +96,23 @@ def test_intersectNone():
     assert m.intersectNone(Room(Coord(0, 4), Coord(1, 5))) == True
 
 
-def test_dig():
-    m = Map(5)
-    r1 = Room(Coord(0, 0), Coord(1, 3))
-    r2 = Room(Coord(3, 1), Coord(4, 4))
-    m.addRoom(r1)
-    m.addRoom(r2)
-    assert str(m) == "..   \n.. ..\n.. ..\n.. ..\n   ..\n"
-    assert m._rooms == []
-    assert m._roomsToReach == [r1, r2]
-
-    m.dig(Coord(1, 2))
-    assert str(m) == "..   \n.. ..\n.. ..\n.. ..\n   ..\n"
-    assert m._rooms == [r1]
-    assert m._roomsToReach == [r2]
-
-    m.dig(Coord(2, 2))
-    assert str(m) == "..   \n.. ..\n.....\n.. ..\n   ..\n"
-    assert m._rooms == [r1]
-    assert m._roomsToReach == [r2]
-
-    m.dig(Coord(3, 2))
-    assert str(m) == "..   \n.. ..\n.....\n.. ..\n   ..\n"
-    assert m._rooms == [r1, r2]
-    assert m._roomsToReach == []
-
-
-def test_corridor():
-    m = Map(5)
-    m.corridor(Coord(0, 1), Coord(4, 2))
-    assert str(m) == "     \n.    \n.....\n     \n     \n"
-
-    m.corridor(Coord(2, 0), Coord(3, 4))
-    assert str(m) == "  .  \n. .  \n.....\n  .  \n  .. \n"
-
-
-def test_reach():
-    m = Map(7)
-    r1 = Room(Coord(0, 0), Coord(2, 2))
-    r2 = Room(Coord(4, 5), Coord(6, 6))
-    r3 = Room(Coord(1, 4), Coord(2, 6))
-    r4 = Room(Coord(5, 1), Coord(6, 2))
-    m.addRoom(r1)
-    m.addRoom(r2)
-    m.addRoom(r3)
-    m.addRoom(r4)
-    m._rooms.append(m._roomsToReach.pop())
-
-    assert m._rooms == [r4]
-    assert m._roomsToReach == [r1, r2, r3]
-    import random
-
-    random.seed(42)
-    m.reach()
-
-    assert m._rooms == [r4, r1]
-    assert m._roomsToReach == [r2, r3]
-
-
-def test_reachAllRooms():
-    m = Map(7)
-    m.addRoom(Room(Coord(0, 0), Coord(2, 2)))
-    m.addRoom(Room(Coord(4, 5), Coord(6, 6)))
-    m.addRoom(Room(Coord(1, 4), Coord(2, 6)))
-    m.addRoom(Room(Coord(5, 1), Coord(6, 2)))
-
-    assert len(m._rooms) == 0
-    assert len(m._roomsToReach) == 4
-
-    m.reachAllRooms()
-    assert len(m._rooms) == 4
-    assert len(m._roomsToReach) == 0
-
-
-def test_randRoom():
-    import random
-
-    random.seed(42)
-    m = Map()
-    assert str(m.randRoom()) == "[<3,0>,<8,8>]"
-    assert str(m.randRoom()) == "[<7,7>,<15,11>]"
-    assert str(m.randRoom()) == "[<3,17>,<10,19>]"
-    assert str(m.randRoom()) == "[<13,1>,<16,4>]"
-    assert str(m.randRoom()) == "[<6,7>,<13,14>]"
-
-
-def test_generateRooms():
-    import random
-
-    random.seed(42)
-    m = Map()
-    m.generateRooms(5)
-    assert m._rooms == []
-    assert str(m._roomsToReach) == "[[<3,0>,<8,8>], [<3,17>,<10,19>], [<13,1>,<16,4>]]"
-
-
 def test_move():
     h = Hero()
-    m = Map(3, pos=Coord(0, 1), hero=h)
+    m = Map(3, hero=h)
     m.put(Coord(0, 2), Element("Sword"))
-    m.put(m._pos, h)
-    assert str(m) == "   \n@  \nS  \n"
+    assert str(m) == "...\n.@.\nS..\n"
     assert m._hero.description() == "<Hero>(10)[]"
     m.move(m._hero, Coord(0, 1))
-    assert str(m) == "   \n@  \n.  \n"
+    assert str(m) == "...\n...\nS@.\n"
+    assert m._hero.description() == "<Hero>(10)[]"
+    assert str(m._elem) == "{S: <0,2>, @: <1,2>}"
+    m.move(m._hero, Coord(-1, 0))
     assert m._hero.description() == "<Hero>(10)[S]"
-    assert m._elem == {m._hero: Coord(0, 1)}
+    assert m._elem == {h: Coord(1, 2)}
 
 
 def test_map():
     h = Hero()
     m = Map(3, hero=h)
-    m.put(m._pos, h)
-    assert str(m) == "   \n @ \n   \n"
     assert m._hero.description() == "<Hero>(10)[]"
     assert m._elem[m._hero] == Coord(1, 1)
