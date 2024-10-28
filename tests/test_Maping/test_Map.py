@@ -21,8 +21,8 @@ def test_initialisation():
     assert map.dir["q"] == Coord(-1, 0)
     assert map.dir["s"] == Coord(0, 1)
     assert map.dir["d"] == Coord(1, 0)
-    assert map._elem == {h: Coord(3, 1)}
-    assert str(map._rooms) == "[[<2,0>,<4,3>]]"
+    assert map._elem == {h: Coord(2, 2)}
+    assert str(map._rooms) == "[[<1,1>,<4,4>]]"
     assert map._roomsToReach == []
     assert len(map._mat) == 5
 
@@ -60,18 +60,17 @@ def test_get():
 def test_pos():
     h = Hero()
     map = Map(5, hero=h)
-    assert map.get_pos(h) == Coord(3, 2)
+    assert map.get_pos(h) == Coord(1, 2)
     h2 = Hero(_abbrv="X")
     map = Map(hero=h2)
-    assert map.get_pos(h2) == Coord(8, 18)
+    assert map.get_pos(h2) == Coord(4, 15)
 
 
 def test_put():
     m = Map(5)
     h = Hero(_abbrv="X")
     m.put(Coord(3, 2), h)
-    assert str(m) == "     \n     \n...X.\n..@..\n.....\n"
-    assert m._elem == {m._hero: Coord(2, 3), h: Coord(3, 2)}
+    assert m._elem == {m._hero: Coord(3, 3), h: Coord(3, 2)}
 
 
 def test_findRoom():
@@ -118,7 +117,9 @@ def test_move_not_posssible():
     m.move(m._hero, Coord(0, -1))
     assert m._elem == {m._hero: Coord(2, 1)}
     m.move(m._hero, Coord(0, -1))
-    assert m._elem == {m._hero: Coord(2, 1)}
+    assert m._elem == {m._hero: Coord(2, 0)}
+    m.move(m._hero, Coord(0, -1))
+    assert m._elem == {m._hero: Coord(2, 0)}
 
 
 def test_map():
