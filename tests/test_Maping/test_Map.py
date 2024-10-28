@@ -137,6 +137,15 @@ def test_dig():
     assert m._roomsToReach == []
 
 
+def test_corridor():
+    m = Map(5)
+    m.corridor(Coord(0, 1), Coord(4, 2))
+    assert str(m) == "     \n.    \n.....\n     \n     \n"
+
+    m.corridor(Coord(2, 0), Coord(3, 4))
+    assert str(m) == "  .  \n. .  \n.....\n  .  \n  .. \n"
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
