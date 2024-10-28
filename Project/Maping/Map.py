@@ -1,3 +1,5 @@
+from Element.Elements import *
+
 from .Coord import Coord
 
 
@@ -6,11 +8,11 @@ class Map:
     dir = {"z": Coord(0, -1), "q": Coord(-1, 0), "s": Coord(0, 1), "d": Coord(1, 0)}
 
     def __init__(
-        self, size: int = 5, pos: Coord = Coord(1, 1), hero: str = "@"
+        self, size: int = 5, pos: Coord = Coord(1, 1), hero: Hero = Hero()
     ) -> None:
-        self.size = size
-        self.pos = pos
-        self.hero = hero
+        self._size = size
+        self._pos = pos
+        self._hero = hero
         self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
         self._elem = {}
         self.put(pos, hero)
@@ -28,36 +30,41 @@ class Map:
         matrix = ""
         for i in range(len(self._mat)):
             for j in self._mat[i]:
-                matrix += j
+                matrix += str(j)
             matrix += "\n"
         return matrix
 
-    def get(self, c: Coord) -> str:
+    def get(self, c: Coord):
         return self._mat[c.y][c.x]
 
-    def get_pos(self, e) -> Coord:
+    def get_pos(self, e: Element) -> Coord:
         return self._elem[e]
 
-    def put(self, c: Coord, e) -> None:
+    def put(self, c: Coord, e: Element) -> None:
         self._mat[c.y][c.x] = e
         self._elem[e] = c
 
     def rm(self, c: Coord) -> None:
-        elem = self.get(c)
-        if elem in self._elem:
-            self._mat[c.y][c.x] = self.ground
-            del self._elem[elem]
+        del self._elem[self.get(c)]
+        self._mat[c.y][c.x] = Map.ground
 
-    def move(self, e, way: Coord) -> None:
-        if self.get_pos(e) + way in self:
-            last_pos = self.get_pos(e)
-            self.rm(last_pos)
-            self.put((last_pos + way), e)
+    def move(self, e: Element, way: Coord) -> None:
+        c2 = self.get_pos(e) + way
+        if c2 in self and self.get(c2) == Map.ground:
+            self.rm(self.get_pos(e))
+            self.put(c2, e)
+        else:
+            if c2 in self and self.get(c2).meet(e) == True:
+                self.rm(c2)
 
-    def play(self, hero="@"):
-        while True:
+    def play(self):
+        print("--- Welcome Hero! ---")
+        while self._hero._hp > 0:
+            print()
             print(self)
-            self.move(hero, Map.dir[getch()])
+            print(self._hero.description())
+            self.move(self._hero, Map.dir[getch()])
+        print("--- Game Over ---")
 
 
 def getch():
