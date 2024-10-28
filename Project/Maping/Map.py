@@ -1,5 +1,5 @@
 import random
-from typing import Union
+from typing import Dict, List, Union
 
 from Project.Element.Elements import *
 
@@ -13,16 +13,20 @@ class Map:
     dir = {"z": Coord(0, -1), "q": Coord(-1, 0), "s": Coord(0, 1), "d": Coord(1, 0)}
 
     def __init__(
-        self, size: int = 20, pos: Coord = Coord(1, 1), hero: Hero = Hero()
+        self,
+        size: int = 20,
+        hero: Hero = Hero(),
+        nbrooms: int = 7,
     ) -> None:
         self._size = size
-        self._pos = pos
         self._hero = hero
         self._mat = [[Map.empty for _ in range(size)] for _ in range(size)]
-        self._elem = {}
-        # self.put(pos, hero)
-        self._roomsToReach = []
-        self._rooms = []
+        self._elem: Dict[Element, Coord] = {}
+        self._roomsToReach: List[Room] = []
+        self._rooms: List[Room] = []
+        self.generateRooms(nbrooms)
+        self.reachAllRooms()
+        self.put(self._rooms[0].center(), hero)
 
     def __len__(self) -> int:
         return len(self._mat)
