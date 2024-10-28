@@ -68,9 +68,10 @@ def test_pos():
 
 def test_put():
     m = Map(5)
-    m.put(Coord(3, 2), "X")
+    h = Hero(_abbrv="X")
+    m.put(Coord(3, 2), h)
     assert str(m) == "     \n     \n...X.\n..@..\n.....\n"
-    assert m._elem == {m._hero: Coord(2, 3), "X": Coord(3, 2)}
+    assert m._elem == {m._hero: Coord(2, 3), h: Coord(3, 2)}
 
 
 def test_findRoom():
@@ -139,5 +140,37 @@ def test_raise_get():
         Map().get(Coord(-1, 0))
         assert True == False
     except IndexError:
+        print("Test passed")
+        assert True == True
+
+
+def test_raise_put():
+    m = Map()
+    try:
+        m.put(42, Hero())
+        assert True == False
+    except TypeError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        m.put(Coord(-1, 0), Hero())
+        assert True == False
+    except IndexError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        m.put(Coord(1, 1), "@")
+        assert True == False
+    except TypeError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        m.put(Coord(1, 1), Hero())
+        m.put(Coord(1, 1), Hero())
+        assert True == False
+    except ValueError:
         print("Test passed")
         assert True == True
