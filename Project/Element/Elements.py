@@ -16,7 +16,7 @@ class Element(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def meet(self, hero: "Hero") -> bool:
-        raise ReferenceError("Abstract method")
+        raise NotImplementedError("Abstract method")
 
 
 class Equipment(Element):

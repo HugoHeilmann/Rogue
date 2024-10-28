@@ -32,14 +32,21 @@ def test_meet():
 
 
 # Equipment
-
-
 def test_heritage():
     assert isinstance(Equipment("Sword"), Element) == True
     assert isinstance(Creature("Goblin", 5), Element) == True
     assert isinstance(Hero(), Element) == True
     assert isinstance(Creature("Goblin", 5), Equipment) == False
     assert isinstance(Element("XXX"), Equipment) == False
+
+
+def test_meet():
+    h = Hero()
+    assert h.description() == "<Hero>(10)[]"
+    o = Equipment("Golf")
+    o.meet(h)
+    assert h.description() == "<Hero>(10)[G]"
+    assert (o in h._inventory) == True
 
 
 # Creature
