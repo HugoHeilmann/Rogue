@@ -79,6 +79,25 @@ class Map:
             self._roomsToReach.remove(r)
             self._rooms.append(r)
 
+    def corridor(self, start: Coord, end: Coord) -> None:
+        if start.y > end.y:
+            while start.y != end.y:
+                self.dig(start)
+                start.y -= 1
+        else:
+            while start.y != end.y:
+                self.dig(start)
+                start.y += 1
+        if start.x > end.x:
+            while start.x != end.x:
+                self.dig(start)
+                start.x -= 1
+        else:
+            while start.x != end.x:
+                self.dig(start)
+                start.x += 1
+        self.dig(end)
+
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
         if c2 in self and self.get(c2) == Map.ground:
