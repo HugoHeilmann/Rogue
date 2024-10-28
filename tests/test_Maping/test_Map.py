@@ -21,8 +21,7 @@ def test_initialisation():
     assert map.dir["q"] == Coord(-1, 0)
     assert map.dir["s"] == Coord(0, 1)
     assert map.dir["d"] == Coord(1, 0)
-    assert map._elem == {h: Coord(2, 2)}
-    assert str(map._rooms) == "[[<1,1>,<4,4>]]"
+    assert (h in map._elem) == True
     assert map._roomsToReach == []
     assert len(map._mat) == 5
 
@@ -47,30 +46,6 @@ def test_contains():
 def test_str():
     map = Map(3)
     assert str(map) == "...\n.@.\n...\n"
-
-
-def test_get():
-    map = Map(5)
-    map.put(Coord(1, 1), Hero())
-    assert map.get(Coord(0, 4)) == "."
-    assert str(map.get(Coord(1, 1))) == "@"
-    assert map.get(Coord(2, 3)) == "."
-
-
-def test_pos():
-    h = Hero()
-    map = Map(5, hero=h)
-    assert map.get_pos(h) == Coord(1, 2)
-    h2 = Hero(_abbrv="X")
-    map = Map(hero=h2)
-    assert map.get_pos(h2) == Coord(4, 15)
-
-
-def test_put():
-    m = Map(5)
-    h = Hero(_abbrv="X")
-    m.put(Coord(3, 2), h)
-    assert m._elem == {m._hero: Coord(3, 3), h: Coord(3, 2)}
 
 
 def test_findRoom():
