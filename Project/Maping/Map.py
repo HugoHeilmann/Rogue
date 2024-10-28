@@ -1,3 +1,4 @@
+import random
 from typing import Union
 
 from Project.Element.Elements import *
@@ -97,6 +98,11 @@ class Map:
                 self.dig(start)
                 start.x += 1
         self.dig(end)
+
+    def reach(self) -> None:
+        roomA: Room = random.choice(self._rooms)
+        roomB: Room = random.choice(self._roomsToReach)
+        self.corridor(roomA.center(), roomB.center())
 
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
