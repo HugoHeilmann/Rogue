@@ -104,6 +104,11 @@ class Map:
         roomB: Room = random.choice(self._roomsToReach)
         self.corridor(roomA.center(), roomB.center())
 
+    def reachAllRooms(self) -> None:
+        self._rooms.append(self._roomsToReach.pop())
+        while self._roomsToReach != []:
+            self.reach()
+
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
         if c2 in self and self.get(c2) == Map.ground:
