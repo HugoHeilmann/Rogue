@@ -109,6 +109,15 @@ class Map:
         while self._roomsToReach != []:
             self.reach()
 
+    def randRoom(self) -> Room:
+        x1: int = random.randint(0, len(self) - 3)
+        y1: int = random.randint(0, len(self) - 3)
+        height: int = random.randint(3, 9)
+        width: int = random.randint(3, 9)
+        x2: int = min(len(self) - 1, x1 + width)
+        y2: int = min(len(self) - 1, y1 + height)
+        return Room(Coord(x1, y1), Coord(x2, y2))
+
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
         if c2 in self and self.get(c2) == Map.ground:
