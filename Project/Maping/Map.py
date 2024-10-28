@@ -1,3 +1,5 @@
+from typing import Union
+
 from Project.Element.Elements import *
 
 from .Coord import Coord
@@ -52,11 +54,23 @@ class Map:
         del self._elem[self.get(c)]
         self._mat[c.y][c.x] = Map.ground
 
-    def addRome(self, r: Room):
+    def addRoom(self, r: Room):
         self._roomsToReach.append(r)
         for i in range(r._c1.x, r._c2.x + 1):
             for j in range(r._c1.y, r._c2.y + 1):
                 self._mat[j][i] = Map.ground
+
+    def findRoom(self, c: Coord) -> Union[Room, bool]:
+        for r in self._roomsToReach:
+            if c in r:
+                return r
+        return False
+
+    def intersectNone(self, room: Room) -> bool:
+        for r in self._roomsToReach:
+            if room.intersect(r):
+                return False
+        return True
 
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
