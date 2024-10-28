@@ -81,14 +81,37 @@ def test_put():
 
 def test_addRoom():
     m = Map(6)
-    m.addRome(Room(Coord(1, 1), Coord(4, 3)))
+    m.addRoom(Room(Coord(1, 1), Coord(4, 3)))
     assert str(m) == "      \n .... \n .... \n .... \n      \n      \n"
     assert m._rooms == []
     assert len(m._roomsToReach) == 1
     assert str(m._roomsToReach[0]) == "[<1,1>,<4,3>]"
 
 
-def test_way():
+def test_findRoom():
+    m = Map(7)
+    m.addRoom(Room(Coord(0, 0), Coord(2, 2)))
+    m.addRoom(Room(Coord(2, 3), Coord(6, 6)))
+    assert str(m.findRoom(Coord(1, 1))) == "[<0,0>,<2,2>]"
+    assert str(m.findRoom(Coord(1, 5))) == "False"
+    assert str(m.findRoom(Coord(2, 2))) == "[<0,0>,<2,2>]"
+    assert str(m.findRoom(Coord(2, 3))) == "[<2,3>,<6,6>]"
+    assert str(m.findRoom(Coord(4, 5))) == "[<2,3>,<6,6>]"
+    assert str(m.findRoom(Coord(5, 1))) == "False"
+
+
+def test_intersectNone():
+    m = Map(7)
+    m.addRoom(Room(Coord(0, 0), Coord(2, 2)))
+    m.addRoom(Room(Coord(2, 3), Coord(6, 6)))
+    assert m.intersectNone(Room(Coord(1, 0), Coord(1, 5))) == False
+    assert m.intersectNone(Room(Coord(0, 3), Coord(1, 5))) == True
+    assert m.intersectNone(Room(Coord(1, 1), Coord(4, 4))) == False
+    assert m.intersectNone(Room(Coord(1, 3), Coord(5, 6))) == False
+    assert m.intersectNone(Room(Coord(0, 4), Coord(1, 5))) == True
+
+
+def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
     m.put(Coord(0, 2), Element("Sword"))
