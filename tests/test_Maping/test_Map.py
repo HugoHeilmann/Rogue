@@ -2,6 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from Project.Element.Elements import Hero
 from Project.Maping.Coord import Coord
 from Project.Maping.Map import Map
 
@@ -16,7 +17,7 @@ def test_initialisation():
     assert len(map._mat) == 5
     for i in range(len(map._mat)):
         assert len(map._mat[i]) == 5
-    assert map._elem["@"] == Coord(1, 1)
+    assert map._elem[str(map._hero)] == Coord(1, 1)
 
 
 def test_len():
@@ -37,7 +38,7 @@ def test_contains():
 
     assert ("@" in Map()) == True
     assert ("X" in Map()) == False
-    assert ("X" in Map(pos=Coord(4, 4), hero="X")) == True
+    assert ("X" in Map(pos=Coord(4, 4), hero=Hero(_abbrv="X"))) == True
 
 
 def test_str():
@@ -52,11 +53,11 @@ def test_get():
 
 
 def test_pos():
-    map = Map(pos=Coord(1, 1), hero="@")
+    map = Map(pos=Coord(1, 1), hero=Hero(_abbrv="@"))
     coord = map.get_pos("@")
     assert coord.x == 1
     assert coord.y == 1
-    assert Map(pos=Coord(2, 3), hero="X").get_pos("X") == Coord(2, 3)
+    assert Map(pos=Coord(2, 3), hero=Hero(_abbrv="X")).get_pos("X") == Coord(2, 3)
 
 
 def test_put():
@@ -75,3 +76,10 @@ def test_way():
     m.move("@", Coord(0, 1))
     assert str(m) == "...\n...\n@..\n"
     assert m._elem == {"@": Coord(0, 2)}
+
+
+def test_map():
+    m = Map(3)
+    assert str(m) == "...\n.@.\n...\n"
+    assert m._hero.description() == "<Hero>(10)[]"
+    assert m._elem[str(m._hero)] == Coord(1, 1)
