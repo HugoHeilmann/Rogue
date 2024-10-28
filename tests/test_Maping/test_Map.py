@@ -111,6 +111,15 @@ def test_move():
     assert m._elem == {h: Coord(1, 2)}
 
 
+def test_move_not_posssible():
+    m = Map(5)
+    assert m._elem == {m._hero: Coord(2, 2)}
+    m.move(m._hero, Coord(0, -1))
+    assert m._elem == {m._hero: Coord(2, 1)}
+    m.move(m._hero, Coord(0, -1))
+    assert m._elem == {m._hero: Coord(2, 1)}
+
+
 def test_map():
     h = Hero()
     m = Map(3, hero=h)
