@@ -196,6 +196,16 @@ def test_randRoom():
     assert str(m.randRoom()) == "[<6,7>,<13,14>]"
 
 
+def test_generateRooms():
+    import random
+
+    random.seed(42)
+    m = Map()
+    m.generateRooms(5)
+    assert m._rooms == []
+    assert str(m._roomsToReach) == "[[<3,0>,<8,8>], [<3,17>,<10,19>], [<13,1>,<16,4>]]"
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
