@@ -10,8 +10,8 @@ class Map:
     def __init__(
         self, size: int = 5, pos: Coord = Coord(1, 1), hero: Hero = Hero()
     ) -> None:
-        self.size = size
-        self.pos = pos
+        self._size = size
+        self._pos = pos
         self._hero = hero
         self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
         self._elem = {}
@@ -34,27 +34,28 @@ class Map:
             matrix += "\n"
         return matrix
 
-    def get(self, c: Coord) -> str:
+    def get(self, c: Coord):
         return self._mat[c.y][c.x]
 
     def get_pos(self, e: Element) -> Coord:
         return self._elem[e]
 
     def put(self, c: Coord, e: Element) -> None:
-        self._mat[c.y][c.x] = str(e)
-        self._elem[str(e)] = c
+        self._mat[c.y][c.x] = e
+        self._elem[e] = c
 
     def rm(self, c: Coord) -> None:
-        elem = self.get(c)
-        if elem in self._elem:
-            self._mat[c.y][c.x] = self.ground
-            del self._elem[elem]
+        del self._elem[self.get(c)]
+        self._mat[c.y][c.x] = Map.ground
 
     def move(self, e: Element, way: Coord) -> None:
-        if self.get_pos(e) + way in self:
-            last_pos = self.get_pos(e)
-            self.rm(last_pos)
-            self.put((last_pos + way), e)
+        c2 = self.get_pos(e) + way
+        if c2 in self and self.get(c2) == Map.ground:
+            self.rm(self.get_pos(e))
+            self.put(c2, e)
+        else:
+            if c2 in self and self.get(c2).meet(e) == True:
+                self.rm(c2)
 
     def play(self, hero=Hero()):
         while True:
