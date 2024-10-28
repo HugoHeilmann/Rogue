@@ -57,6 +57,8 @@ class Map:
         self.checkCoord(c)
         self.checkElement(e)
         if self._mat[c.y][c.x] != Map.ground:
+            print(self)
+            print("cell: ", self._mat[c.y][c.x])
             raise ValueError("Incorect cell")
         if e in self._elem:
             raise KeyError("Already placed")
