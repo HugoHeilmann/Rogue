@@ -46,30 +46,26 @@ class Map:
         return matrix
 
     def get(self, c: Coord):
-        if not (isinstance(c, Coord)):
-            raise TypeError("Not a Coord")
-        if c.x < 0 or c.y < 0 or c.x > len(self) or c.y > len(self):
-            raise IndexError("Out of map Coord")
+        self.checkCoord(c)
         return self._mat[c.y][c.x]
 
     def get_pos(self, e: Element) -> Coord:
+        self.checkElement(e)
         return self._elem[e]
 
     def put(self, c: Coord, e: Element) -> None:
-        if not (isinstance(c, Coord)):
-            raise TypeError("Not a Coord")
-        if not (isinstance(e, Element)):
-            raise TypeError("Not an Element")
-        if c.x < 0 or c.y < 0 or c.x > len(self) or c.y > len(self):
-            raise IndexError("Out of map Coord")
+        self.checkCoord(c)
+        self.checkElement(e)
         if self._mat[c.y][c.x] != Map.ground:
             raise ValueError("Incorect cell")
         if e in self._elem:
             raise KeyError("Already placed")
+
         self._mat[c.y][c.x] = e
         self._elem[e] = c
 
     def rm(self, c: Coord) -> None:
+        self.checkCoord(c)
         del self._elem[self.get(c)]
         self._mat[c.y][c.x] = Map.ground
 
@@ -154,6 +150,16 @@ class Map:
         else:
             if c2 in self and self.get(c2).meet(e) == True:
                 self.rm(c2)
+
+    def checkCoord(self, c: Coord) -> None:
+        if not (isinstance(c, Coord)):
+            raise TypeError("Not a Coord")
+        if c.x < 0 or c.y < 0 or c.x > len(self) or c.y > len(self):
+            raise IndexError("Out of map Coord")
+
+    def checkElement(self, e) -> None:
+        if not (isinstance(e, Element)):
+            raise TypeError("Not an Element")
 
     def play(self):
         print("--- Welcome Hero! ---")
