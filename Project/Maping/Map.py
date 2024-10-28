@@ -130,6 +130,8 @@ class Map:
 
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
+        if self.get(c2) == Map.empty:
+            return
         if c2 in self and self.get(c2) == Map.ground:
             self.rm(self.get_pos(e))
             self.put(c2, e)
