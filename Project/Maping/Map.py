@@ -1,7 +1,7 @@
 import random
 from typing import Dict, List, Union
 
-from Element.Elements import Element, Hero
+from Project.Element.Elements import Element, Hero
 
 from .Coord import Coord
 from .Room import Room
@@ -46,6 +46,10 @@ class Map:
         return matrix
 
     def get(self, c: Coord):
+        if not (isinstance(c, Coord)):
+            raise TypeError("Not a Coord")
+        if c.x < 0 or c.y < 0 or c.x >= self._size or c.y >= self._size:
+            raise IndexError("Out of map Coord")
         return self._mat[c.y][c.x]
 
     def get_pos(self, e: Element) -> Coord:
