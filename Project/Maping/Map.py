@@ -1,4 +1,4 @@
-from Element.Elements import *
+from Project.Element.Elements import *
 
 from .Coord import Coord
 
