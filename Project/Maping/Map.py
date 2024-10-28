@@ -1,4 +1,4 @@
-from Project.Element.Elements import *
+from Element.Elements import *
 
 from .Coord import Coord
 
@@ -57,10 +57,14 @@ class Map:
             if c2 in self and self.get(c2).meet(e) == True:
                 self.rm(c2)
 
-    def play(self, hero=Hero()):
-        while True:
+    def play(self):
+        print("--- Welcome Hero! ---")
+        while self._hero._hp > 0:
+            print()
             print(self)
-            self.move(hero, Map.dir[getch()])
+            print(self._hero.description())
+            self.move(self._hero, Map.dir[getch()])
+        print("--- Game Over ---")
 
 
 def getch():
