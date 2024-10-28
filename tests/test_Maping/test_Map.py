@@ -146,6 +146,29 @@ def test_corridor():
     assert str(m) == "  .  \n. .  \n.....\n  .  \n  .. \n"
 
 
+def test_reach():
+    m = Map(7)
+    r1 = Room(Coord(0, 0), Coord(2, 2))
+    r2 = Room(Coord(4, 5), Coord(6, 6))
+    r3 = Room(Coord(1, 4), Coord(2, 6))
+    r4 = Room(Coord(5, 1), Coord(6, 2))
+    m.addRoom(r1)
+    m.addRoom(r2)
+    m.addRoom(r3)
+    m.addRoom(r4)
+    m._rooms.append(m._roomsToReach.pop())
+
+    assert m._rooms == [r4]
+    assert m._roomsToReach == [r1, r2, r3]
+    import random
+
+    random.seed(42)
+    m.reach()
+
+    assert m._rooms == [r4, r1]
+    assert m._roomsToReach == [r2, r3]
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
