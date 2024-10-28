@@ -1,7 +1,7 @@
 import random
 from typing import Dict, List, Union
 
-from Project.Element.Elements import *
+from Element.Elements import Element, Hero
 
 from .Coord import Coord
 from .Room import Room
@@ -130,6 +130,8 @@ class Map:
 
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
+        if c2 not in self:
+            return
         if self.get(c2) == Map.empty:
             return
         if c2 in self and self.get(c2) == Map.ground:
