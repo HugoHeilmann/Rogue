@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 import random
 
-from Project.Element.Elements import Element, Hero
+from Project.Element.Elements import Equipment, Hero
 from Project.Maping.Coord import Coord
 from Project.Maping.Map import Map
 from Project.Maping.Room import Room
@@ -100,7 +100,7 @@ def test_intersectNone():
 def test_move():
     h = Hero()
     m = Map(3, hero=h)
-    m.put(Coord(0, 2), Element("Sword"))
+    m.put(Coord(0, 2), Equipment("Sword"))
     assert str(m) == "...\n.@.\nS..\n"
     assert m._hero.description() == "<Hero>(10)[]"
     m.move(m._hero, Coord(0, 1))

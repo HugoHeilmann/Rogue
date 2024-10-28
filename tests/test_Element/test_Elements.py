@@ -7,12 +7,12 @@ from Project.Element.Elements import *
 
 # Element
 def test_initialisation_element():
-    o = Element("sword", "T")
+    o = Equipment("sword", "T")
     assert o._name == "sword"
     assert o._abbrv == "T"
     assert str(o) == "T"
 
-    o = Element("gold")
+    o = Equipment("gold")
     assert o._name == "gold"
     assert o._abbrv == "g"
     assert str(o) == "g"
@@ -29,6 +29,17 @@ def test_meet():
     assert o.meet(hero) == True
     assert hero.description() == "<Hero>(10)[G]"
     assert (o in hero._inventory) == True
+
+
+# Equipment
+
+
+def test_heritage():
+    assert isinstance(Equipment("Sword"), Element) == True
+    assert isinstance(Creature("Goblin", 5), Element) == True
+    assert isinstance(Hero(), Element) == True
+    assert isinstance(Creature("Goblin", 5), Equipment) == False
+    assert isinstance(Element("XXX"), Equipment) == False
 
 
 # Creature
@@ -84,7 +95,7 @@ def test_initialisation_hero():
 
 def test_take():
     h = Hero()
-    s = Element("sword")
+    s = Equipment("sword")
     h.take(s)
     assert h._inventory == [s]
     assert h.description() == "<Hero>(10)[s]"
