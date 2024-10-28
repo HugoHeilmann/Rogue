@@ -1,4 +1,7 @@
-class Element:
+import abc
+
+
+class Element(metaclass=abc.ABCMeta):
     def __init__(self, _name: str, _abbrv: str = ""):
         self._name = _name
         self._abbrv = _abbrv
@@ -10,6 +13,16 @@ class Element:
 
     def description(self) -> str:
         return f"<{self._name}>"
+
+    @abc.abstractmethod
+    def meet(self, hero: "Hero") -> bool:
+        raise ReferenceError("Abstract method")
+
+
+class Equipment(Element):
+
+    def __init__(self, _name: str, _abbrv: str = "") -> None:
+        Element.__init__(self, _name, _abbrv)
 
     def meet(self, hero: "Hero") -> bool:
         hero.take(self)
@@ -37,7 +50,9 @@ class Hero(Creature):
         Creature.__init__(self, _name, _hp, _abbrv, _strength)
         self._inventory = []
 
-    def take(self, elem: object):
+    def take(self, elem: Equipment):
+        if not (isinstance(elem, Equipment)):
+            raise TypeError("Not an Equipment")
         self._inventory.append(elem)
 
     def description(self):
