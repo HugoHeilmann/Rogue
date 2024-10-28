@@ -169,6 +169,21 @@ def test_reach():
     assert m._roomsToReach == [r2, r3]
 
 
+def test_reachAllRooms():
+    m = Map(7)
+    m.addRoom(Room(Coord(0, 0), Coord(2, 2)))
+    m.addRoom(Room(Coord(4, 5), Coord(6, 6)))
+    m.addRoom(Room(Coord(1, 4), Coord(2, 6)))
+    m.addRoom(Room(Coord(5, 1), Coord(6, 2)))
+
+    assert len(m._rooms) == 0
+    assert len(m._roomsToReach) == 4
+
+    m.reachAllRooms()
+    assert len(m._rooms) == 4
+    assert len(m._roomsToReach) == 0
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
