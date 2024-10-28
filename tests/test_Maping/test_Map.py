@@ -174,3 +174,27 @@ def test_raise_put():
     except ValueError:
         print("Test passed")
         assert True == True
+
+
+def test_check():
+    m = Map()
+    try:
+        m.checkCoord(Coord(-1, 0))
+        assert True == False
+    except IndexError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        m.checkCoord(42)
+        assert True == False
+    except TypeError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        m.checkElement(42)
+        assert True == False
+    except TypeError:
+        print("Test passed")
+        assert True == True
