@@ -1,21 +1,25 @@
 from Project.Element.Elements import *
 
 from .Coord import Coord
+from .Room import Room
 
 
 class Map:
+    empty = " "
     ground = "."
     dir = {"z": Coord(0, -1), "q": Coord(-1, 0), "s": Coord(0, 1), "d": Coord(1, 0)}
 
     def __init__(
-        self, size: int = 5, pos: Coord = Coord(1, 1), hero: Hero = Hero()
+        self, size: int = 20, pos: Coord = Coord(1, 1), hero: Hero = Hero()
     ) -> None:
         self._size = size
         self._pos = pos
         self._hero = hero
-        self._mat = [[Map.ground for _ in range(size)] for _ in range(size)]
+        self._mat = [[Map.empty for _ in range(size)] for _ in range(size)]
         self._elem = {}
-        self.put(pos, hero)
+        # self.put(pos, hero)
+        self._roomsToReach = []
+        self._rooms = []
 
     def __len__(self) -> int:
         return len(self._mat)
@@ -47,6 +51,12 @@ class Map:
     def rm(self, c: Coord) -> None:
         del self._elem[self.get(c)]
         self._mat[c.y][c.x] = Map.ground
+
+    def addRome(self, r: Room):
+        self._roomsToReach.append(r)
+        for i in range(r._c1.x, r._c2.x + 1):
+            for j in range(r._c1.y, r._c2.y + 1):
+                self._mat[j][i] = Map.ground
 
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
