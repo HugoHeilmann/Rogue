@@ -72,6 +72,13 @@ class Map:
                 return False
         return True
 
+    def dig(self, c: Coord) -> None:
+        self._mat[c.y][c.x] = Map.ground
+        if self.findRoom(c) != False:
+            r: Room = self.findRoom(c)
+            self._roomsToReach.remove(r)
+            self._rooms.append(r)
+
     def move(self, e: Element, way: Coord) -> None:
         c2 = self.get_pos(e) + way
         if c2 in self and self.get(c2) == Map.ground:
