@@ -48,7 +48,7 @@ class Map:
     def get(self, c: Coord):
         if not (isinstance(c, Coord)):
             raise TypeError("Not a Coord")
-        if c.x < 0 or c.y < 0 or c.x >= self._size or c.y >= self._size:
+        if c.x < 0 or c.y < 0 or c.x > len(self) or c.y > len(self):
             raise IndexError("Out of map Coord")
         return self._mat[c.y][c.x]
 
@@ -56,6 +56,16 @@ class Map:
         return self._elem[e]
 
     def put(self, c: Coord, e: Element) -> None:
+        if not (isinstance(c, Coord)):
+            raise TypeError("Not a Coord")
+        if not (isinstance(e, Element)):
+            raise TypeError("Not an Element")
+        if c.x < 0 or c.y < 0 or c.x > len(self) or c.y > len(self):
+            raise IndexError("Out of map Coord")
+        if self._mat[c.y][c.x] != Map.ground:
+            raise ValueError("Incorect cell")
+        if e in self._elem:
+            raise KeyError("Already placed")
         self._mat[c.y][c.x] = e
         self._elem[e] = c
 
