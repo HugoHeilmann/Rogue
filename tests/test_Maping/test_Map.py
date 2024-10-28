@@ -111,6 +111,32 @@ def test_intersectNone():
     assert m.intersectNone(Room(Coord(0, 4), Coord(1, 5))) == True
 
 
+def test_dig():
+    m = Map(5)
+    r1 = Room(Coord(0, 0), Coord(1, 3))
+    r2 = Room(Coord(3, 1), Coord(4, 4))
+    m.addRoom(r1)
+    m.addRoom(r2)
+    assert str(m) == "..   \n.. ..\n.. ..\n.. ..\n   ..\n"
+    assert m._rooms == []
+    assert m._roomsToReach == [r1, r2]
+
+    m.dig(Coord(1, 2))
+    assert str(m) == "..   \n.. ..\n.. ..\n.. ..\n   ..\n"
+    assert m._rooms == [r1]
+    assert m._roomsToReach == [r2]
+
+    m.dig(Coord(2, 2))
+    assert str(m) == "..   \n.. ..\n.....\n.. ..\n   ..\n"
+    assert m._rooms == [r1]
+    assert m._roomsToReach == [r2]
+
+    m.dig(Coord(3, 2))
+    assert str(m) == "..   \n.. ..\n.....\n.. ..\n   ..\n"
+    assert m._rooms == [r1, r2]
+    assert m._roomsToReach == []
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
