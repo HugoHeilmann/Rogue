@@ -63,3 +63,7 @@ class Game(object):
 
     def randMonster(self) -> Creature:
         return self.randElement(self.monsters)
+
+
+def theGame(game=Game()):
+    return game
