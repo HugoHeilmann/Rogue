@@ -184,6 +184,18 @@ def test_reachAllRooms():
     assert len(m._roomsToReach) == 0
 
 
+def test_randRoom():
+    import random
+
+    random.seed(42)
+    m = Map()
+    assert str(m.randRoom()) == "[<3,0>,<8,8>]"
+    assert str(m.randRoom()) == "[<7,7>,<15,11>]"
+    assert str(m.randRoom()) == "[<3,17>,<10,19>]"
+    assert str(m.randRoom()) == "[<13,1>,<16,4>]"
+    assert str(m.randRoom()) == "[<6,7>,<13,14>]"
+
+
 def test_move():
     h = Hero()
     m = Map(3, pos=Coord(0, 1), hero=h)
