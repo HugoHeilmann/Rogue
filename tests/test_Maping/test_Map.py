@@ -125,3 +125,19 @@ def test_map():
     m = Map(3, hero=h)
     assert m._hero.description() == "<Hero>(10)[]"
     assert m._elem[m._hero] == Coord(1, 1)
+
+
+def test_raise_get():
+    try:
+        Map().get(42)
+        assert True == False
+    except TypeError:
+        print("Test passed")
+        assert True == True
+
+    try:
+        Map().get(Coord(-1, 0))
+        assert True == False
+    except IndexError:
+        print("Test passed")
+        assert True == True
