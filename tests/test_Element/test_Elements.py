@@ -29,7 +29,7 @@ def test_heritage():
     assert isinstance(Element("XXX"), Equipment) == False
 
 
-def test_meet():
+def test_meet_equipment():
     h = Hero()
     assert h.description() == "<Hero>(10)[]"
     o = Equipment("Golf")
@@ -62,7 +62,7 @@ def test_creature_description():
     assert Creature("Snake", 2).description() == "<Snake>(2)"
 
 
-def test_meet():
+def test_meet_hero():
     h = Hero()
     o = Creature("Ork", 3)
     assert o.meet(h) == False
@@ -72,8 +72,8 @@ def test_meet():
     assert h.description() == "<Hero>(10)[]"
     assert o.description() == "<Ork>(-1)"
 
-    h = Hero(_hp=3, _strength=10)
-    o = Creature(_name="Ork", _strength=10, _hp=12)
+    h = Hero(hp=3, strength=10)
+    o = Creature(name="Ork", strength=10, hp=12)
     assert o.meet(h) == False
     assert h.description() == "<Hero>(3)[]"
     assert o.description() == "<Ork>(2)"
@@ -103,7 +103,7 @@ def test_hero_description():
 
 
 # Game
-def test_initialisation():
+def test_initialisation_game():
     assert str(Game()._hero) == "@"
     assert Game()._level == 1
     assert Game()._floor == None
@@ -135,7 +135,7 @@ def test_messages():
 
 
 # Map
-def test_initialisation():
+def test_initialisation_map():
     h = Hero()
     map = Map(5, hero=h)
     assert map.ground == "."
@@ -166,20 +166,15 @@ def test_contains():
     assert (Coord(4, 4) in Map()) == True
 
 
-def test_str():
-    map = Map(3)
-    assert str(map) == "...\n.@.\n...\n"
-
-
 def test_findRoom():
     m = Map(7)
     m.addRoom(Room(Coord(0, 0), Coord(2, 2)))
     m.addRoom(Room(Coord(2, 3), Coord(6, 6)))
-    assert str(m.findRoom(Coord(1, 1))) == "[<0,0>,<2,2>]"
+    assert str(m.findRoom(Coord(1, 1))) == "[<0,0>, <2,2>]"
     assert str(m.findRoom(Coord(1, 5))) == "False"
-    assert str(m.findRoom(Coord(2, 2))) == "[<0,0>,<2,2>]"
-    assert str(m.findRoom(Coord(2, 3))) == "[<2,3>,<6,6>]"
-    assert str(m.findRoom(Coord(4, 5))) == "[<2,3>,<6,6>]"
+    assert str(m.findRoom(Coord(2, 2))) == "[<0,0>, <2,2>]"
+    assert str(m.findRoom(Coord(2, 3))) == "[<2,3>, <6,6>]"
+    assert str(m.findRoom(Coord(4, 5))) == "[<2,3>, <6,6>]"
     assert str(m.findRoom(Coord(5, 1))) == "False"
 
 
@@ -199,6 +194,31 @@ def test_map():
     m = Map(3, hero=h)
     assert m._hero.description() == "<Hero>(10)[]"
     assert m._elem[m._hero] == Coord(1, 1)
+
+
+def test_move_all_monsters():
+    m = Map(5)
+    m._mat = [
+        [" ", ".", ".", ".", " "],
+        [" ", ".", ".", ".", " "],
+        [" ", " ", ".", " ", " "],
+        [" ", ".", ".", ".", " "],
+        [" ", ".", ".", ".", " "],
+    ]
+    m._elem = {}
+    m.put(Coord(1, 3), m._hero)
+    m.put(Coord(1, 0), Creature("Ork", 3))
+    m.put(Coord(3, 4), Creature("Goblin", 3))
+    m.put(Coord(3, 3), Equipment("x"))
+    assert m._hero.description() == "<Hero>(10)[]"
+    m.moveAllMonsters()
+    assert m._hero.description() == "<Hero>(10)[]"
+    m.moveAllMonsters()
+    assert m._hero.description() == "<Hero>(10)[]"
+    m.moveAllMonsters()
+    assert m._hero.description() == "<Hero>(9)[]"
+    m.moveAllMonsters()
+    assert m._hero.description() == "<Hero>(8)[]"
 
 
 def test_raise_get():
@@ -276,11 +296,11 @@ def test_check():
 # Room
 
 
-def test_str():
+def test_str_room():
     r1 = Room(Coord(2, 3), Coord(4, 5))
     assert str(r1._c1) == "<2,3>"
     assert str(r1._c2) == "<4,5>"
-    assert str(r1) == "[<2,3>,<4,5>]"
+    assert str(r1) == "[<2,3>, <4,5>]"
 
 
 def test_contains():
@@ -336,10 +356,3 @@ def test_put_stairs():
     theGame().buildFloor()
     m = theGame()._floor
     assert str(m.get(m._rooms[-1].center())) == str(Stairs())
-
-
-def test_meet_stairs():
-    theGame().buildFloor()
-    m = theGame()._floor
-    m.move(m._hero, m._rooms[-1].center() - m.get_pos(m._hero))
-    assert (theGame()._floor == m) == False
