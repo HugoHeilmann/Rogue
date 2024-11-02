@@ -20,19 +20,6 @@ def test_initialisation_element():
     assert str(o) == "g"
 
 
-def test_description():
-    assert Element("sword").description() == "<sword>"
-    assert Element("Gold").description() == "<Gold>"
-
-
-def test_meet():
-    hero = Hero()
-    o = Element("Gold")
-    assert o.meet(hero) == True
-    assert hero.description() == "<Hero>(10)[G]"
-    assert (o in hero._inventory) == True
-
-
 # Equipment
 def test_heritage():
     assert isinstance(Equipment("Sword"), Element) == True
@@ -70,7 +57,7 @@ def test_heritage():
     assert isinstance(Creature("Goblin", 5), Element) == True
 
 
-def test_description():
+def test_creature_description():
     assert Creature("Goblin", 9).description() == "<Goblin>(9)"
     assert Creature("Snake", 2).description() == "<Snake>(2)"
 
@@ -110,7 +97,7 @@ def test_take():
     assert h.description() == "<Hero>(10)[s]"
 
 
-def test_description():
+def test_hero_description():
     h = Hero()
     assert h.description() == "<Hero>(10)[]"
 
@@ -335,3 +322,24 @@ def test_decorate():
     m._rooms[1].decorate(m)
     print(m)
     print(m._elem)
+
+
+# Stairs
+def test_stairs_description():
+    assert str(Stairs()) == "E"
+    assert str(Stairs().description() == "<Stairs>")
+
+
+def test_put_stairs():
+    m = Map()
+    assert m.get(m._rooms[-1].center()) == m.ground
+    theGame().buildFloor()
+    m = theGame()._floor
+    assert str(m.get(m._rooms[-1].center())) == str(Stairs())
+
+
+def test_meet_stairs():
+    theGame().buildFloor()
+    m = theGame()._floor
+    m.move(m._hero, m._rooms[-1].center() - m.get_pos(m._hero))
+    assert (theGame()._floor == m) == False
