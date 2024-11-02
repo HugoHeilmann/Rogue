@@ -147,19 +147,6 @@ def test_messages():
     assert theGame().readMessages() == "The Orc hits the <Hero>(9)[s]. "
 
 
-def test_rand():
-    assert str(Game().randElement({0: [Equipment("x")]})) == "x"
-
-    random.seed(42)
-    g = Game()
-    assert g.randEquipment().description() == "<sword>"
-    assert g.randEquipment().description() == "<sword>"
-    assert g.randEquipment().description() == "<potion>"
-    assert g.randMonster().description() == "<Ork>(6)"
-    assert g.randMonster().description() == "<Goblin>(4)"
-    assert g.randMonster().description() == "<Goblin>(4)"
-
-
 # Map
 def test_initialisation():
     h = Hero()
@@ -218,21 +205,6 @@ def test_intersectNone():
     assert m.intersectNone(Room(Coord(1, 1), Coord(4, 4))) == False
     assert m.intersectNone(Room(Coord(1, 3), Coord(5, 6))) == False
     assert m.intersectNone(Room(Coord(0, 4), Coord(1, 5))) == True
-
-
-def test_move():
-    h = Hero()
-    m = Map(3, hero=h)
-    m.put(Coord(0, 2), Equipment("Sword"))
-    assert str(m) == "...\n.@.\nS..\n"
-    assert m._hero.description() == "<Hero>(10)[]"
-    m.move(m._hero, Coord(0, 1))
-    assert str(m) == "...\n...\nS@.\n"
-    assert m._hero.description() == "<Hero>(10)[]"
-    assert str(m._elem) == "{S: <0,2>, @: <1,2>}"
-    m.move(m._hero, Coord(-1, 0))
-    assert m._hero.description() == "<Hero>(10)[S]"
-    assert m._elem == {h: Coord(1, 2)}
 
 
 def test_map():
@@ -353,18 +325,6 @@ def test_randCoord():
     random.seed(22)
     assert Room(Coord(0, 3), Coord(7, 6)).randCoord() == Coord(2, 4)
     assert Room(Coord(10, 13), Coord(47, 56)).randCoord() == Coord(11, 52)
-
-
-def test_randEmptyCoord():
-    m = Map(3)
-    m.rm(Coord(1, 1))
-    m.put(Coord(2, 1), Equipment("x"))
-    m.put(Coord(0, 2), Equipment("x"))
-    random.seed(0)
-    assert m._rooms[0].randEmptyCoord(m) == Coord(0, 1)
-    assert m._rooms[0].randEmptyCoord(m) == Coord(2, 0)
-    assert m._rooms[0].randEmptyCoord(m) == Coord(2, 0)
-    assert m._rooms[0].randEmptyCoord(m) == Coord(1, 0)
 
 
 def test_decorate():

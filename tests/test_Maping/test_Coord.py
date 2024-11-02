@@ -29,6 +29,12 @@ def test_add():
     assert sum.y == 6
 
 
+def test_sub():
+    assert Coord(6, 3) - Coord(1, 2) == Coord(5, 1)
+    assert Coord(4, 10) - Coord(21, 2) == Coord(-17, 8)
+    assert Coord(3, 3) - Coord(3, 3) == Coord(0, 0)
+
+
 def test_str():
     c1 = Coord(3, 4)
     c2 = Coord(0, 0)
