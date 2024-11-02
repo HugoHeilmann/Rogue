@@ -4,7 +4,7 @@ import math
 import random
 from typing import Dict, List, Union
 
-from Maping.Coord import Coord
+from ..Maping.Coord import Coord
 
 
 class Element(metaclass=abc.ABCMeta):
