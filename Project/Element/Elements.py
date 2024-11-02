@@ -1,4 +1,5 @@
 import abc
+import copy
 import math
 import random
 from typing import Dict, List, Union
@@ -65,65 +66,6 @@ class Hero(Creature):
         return super().description() + str(self._inventory)
 
 
-class object:
-    def __init__(self, hero: Hero = None, level: int = 1, floor: "Map" = None) -> None:
-        if hero == None:
-            self._hero: Hero = Hero()
-        else:
-            self._hero: Hero = hero
-        self._level: int = level
-        self._floor: Map = floor
-        self._message: List[str] = []
-
-
-class Game(object):
-    equipments = {
-        0: [Equipment("potion", "!"), Equipment("gold", "o")],
-        1: [Equipment("sword"), Equipment("bow")],
-        2: [Equipment("chainmail")],
-    }
-    monsters = {
-        0: [Creature("Goblin", 4), Creature("Bat", 2, "W")],
-        1: [Creature("Ork", 6, _strength=2), Creature("Blob", 10)],
-        5: [Creature("Dragon", 20, _strength=3)],
-    }
-
-    def __init__(self, hero: Hero = None, level: int = 1, floor: "Map" = None) -> None:
-        object.__init__(self, hero, level, floor)
-
-    def buildFloor(self) -> "Map":
-        self._floor = Map(hero=self._hero)
-        return self._floor
-
-    def addMessage(self, msg: str) -> None:
-        self._message.append(msg)
-
-    def readMessages(self) -> str:
-        res: str = ""
-        for msg in self._message:
-            res += msg
-            res += ". "
-        self._message = []
-        return res
-
-    def randElement(
-        self, collection: Dict[int, List[Union[Equipment, Creature]]]
-    ) -> Union[Equipment, Creature]:
-        x: int = math.floor(random.expovariate(1 / self._level))
-        while x not in self.monsters.keys():
-            x -= 1
-        for rarity in collection:
-            if rarity == x:
-                elements = collection[rarity]
-        return random.choice(elements)
-
-    def randEquipment(self) -> Equipment:
-        return self.randElement(self.equipments)
-
-    def randMonster(self) -> Creature:
-        return self.randElement(self.monsters)
-
-
 class Map:
     empty = " "
     ground = "."
@@ -143,7 +85,9 @@ class Map:
         self._rooms: List[Room] = []
         self.generateRooms(nbrooms)
         self.reachAllRooms()
-        self.put(self._rooms[0].center(), hero)
+        for room in self._rooms:
+            room.decorate(self)
+        self.put(self._rooms[0].center(), self._hero)
 
     def __len__(self) -> int:
         return len(self._mat)
@@ -175,8 +119,8 @@ class Map:
         self.checkElement(e)
         if self._mat[c.y][c.x] != Map.ground:
             raise ValueError("Incorect cell")
-        # if e in self:
-        #    raise KeyError("Already placed")
+        if e in self:
+            raise KeyError("Already placed")
 
         self._mat[c.y][c.x] = e
         self._elem[e] = c
@@ -278,13 +222,73 @@ class Map:
         if not (isinstance(e, Element)):
             raise TypeError("Not an Element")
 
+
+class object:
+    def __init__(self, hero: Hero = None, level: int = 1, floor: Map = None) -> None:
+        if hero == None:
+            self._hero: Hero = Hero()
+        else:
+            self._hero: Hero = hero
+        self._level: int = level
+        self._floor: Map = floor
+        self._message: List[str] = []
+
+
+class Game(object):
+    equipments = {
+        0: [Equipment("potion", "!"), Equipment("gold", "o")],
+        1: [Equipment("sword"), Equipment("bow")],
+        2: [Equipment("chainmail")],
+    }
+    monsters = {
+        0: [Creature("Goblin", 4), Creature("Bat", 2, "W")],
+        1: [Creature("Ork", 6, _strength=2), Creature("Blob", 10)],
+        5: [Creature("Dragon", 20, _strength=3)],
+    }
+
+    def __init__(self, hero: Hero = None, level: int = 1, floor: Map = None) -> None:
+        object.__init__(self, hero, level, floor)
+
+    def buildFloor(self) -> Map:
+        self._floor = Map(hero=self._hero)
+        return self._floor
+
+    def addMessage(self, msg: str) -> None:
+        self._message.append(msg)
+
+    def readMessages(self) -> str:
+        res: str = ""
+        for msg in self._message:
+            res += msg
+            res += ". "
+        self._message = []
+        return res
+
+    def randElement(
+        self, collection: Dict[int, List[Union[Equipment, Creature]]]
+    ) -> Union[Equipment, Creature]:
+        x: int = math.floor(random.expovariate(1 / self._level))
+        while x not in self.monsters.keys():
+            x -= 1
+        for rarity in collection:
+            if rarity == x:
+                elements = collection[rarity]
+        return copy.copy(random.choice(elements))
+
+    def randEquipment(self) -> Equipment:
+        return self.randElement(self.equipments)
+
+    def randMonster(self) -> Creature:
+        return self.randElement(self.monsters)
+
     def play(self):
         print("--- Welcome Hero! ---")
         while self._hero._hp > 0:
             print()
-            print(self)
+            print(self._floor)
             print(self._hero.description())
-            self.move(self._hero, Map.dir[getch()])
+            print(self.readMessages())
+            self._floor.move(self._hero, Map.dir[getch()])
         print("--- Game Over ---")
 
 
