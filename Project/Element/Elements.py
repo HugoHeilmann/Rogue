@@ -251,6 +251,7 @@ class Game(object):
 
     def buildFloor(self) -> Map:
         self._floor = Map(hero=self._hero)
+        self._floor.put(self._floor._rooms[-1].center(), Stairs())
         return self._floor
 
     def addMessage(self, msg: str) -> None:
@@ -338,6 +339,16 @@ class Room:
         randCoordMonster: Coord = self.randEmptyCoord(map)
         randMonster: Creature = theGame().randMonster()
         map.put(randCoordMonster, randMonster)
+
+
+class Stairs(Element):
+    def __init__(self, name="Stairs", abbrv="E"):
+        Element.__init__(self, name, abbrv)
+
+    def meet(self, hero: "Hero") -> bool:
+        theGame()._level += 1
+        theGame().buildFloor()
+        theGame().addMessage(f"{hero._name} goes down")
 
 
 def theGame(game=Game()) -> Game:
