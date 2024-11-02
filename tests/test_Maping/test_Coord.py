@@ -40,3 +40,11 @@ def test_str():
     c2 = Coord(0, 0)
     assert str(c1) == "<3,4>"
     assert str(c2) == "<0,0>"
+
+
+def test_direction():
+    assert Coord(6, 3).direction(Coord(5, 0)) == Coord(0, -1)
+    assert Coord(4, 10).direction(Coord(21, 2)) == Coord(1, 0)
+    assert Coord(3, 3).direction(Coord(1, 3)) == Coord(-1, 0)
+    assert Coord(3, 3).direction(Coord(2, 5)) == Coord(0, 1)
+    assert isinstance(Coord(6, 3).direction(Coord(1, 2)), Coord) == True
