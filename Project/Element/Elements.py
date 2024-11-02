@@ -3,8 +3,7 @@ import math
 import random
 from typing import Dict, List, Union
 
-from Project.Maping.Coord import Coord
-from Project.Maping.Room import Room
+from Maping.Coord import Coord
 
 
 class Element(metaclass=abc.ABCMeta):
@@ -175,11 +174,9 @@ class Map:
         self.checkCoord(c)
         self.checkElement(e)
         if self._mat[c.y][c.x] != Map.ground:
-            print(self)
-            print("cell: ", self._mat[c.y][c.x])
             raise ValueError("Incorect cell")
-        if e in self._elem:
-            raise KeyError("Already placed")
+        # if e in self:
+        #    raise KeyError("Already placed")
 
         self._mat[c.y][c.x] = e
         self._elem[e] = c
@@ -189,19 +186,19 @@ class Map:
         del self._elem[self.get(c)]
         self._mat[c.y][c.x] = Map.ground
 
-    def addRoom(self, r: Room):
+    def addRoom(self, r: "Room"):
         self._roomsToReach.append(r)
         for i in range(r._c1.x, r._c2.x + 1):
             for j in range(r._c1.y, r._c2.y + 1):
                 self._mat[j][i] = Map.ground
 
-    def findRoom(self, c: Coord) -> Union[Room, bool]:
+    def findRoom(self, c: Coord) -> Union["Room", bool]:
         for r in self._roomsToReach:
             if c in r:
                 return r
         return False
 
-    def intersectNone(self, room: Room) -> bool:
+    def intersectNone(self, room: "Room") -> bool:
         for r in self._roomsToReach:
             if room.intersect(r):
                 return False
@@ -243,7 +240,7 @@ class Map:
         while self._roomsToReach != []:
             self.reach()
 
-    def randRoom(self) -> Room:
+    def randRoom(self) -> "Room":
         x1: int = random.randint(0, len(self) - 3)
         y1: int = random.randint(0, len(self) - 3)
         height: int = random.randint(3, 9)
@@ -289,6 +286,54 @@ class Map:
             print(self._hero.description())
             self.move(self._hero, Map.dir[getch()])
         print("--- Game Over ---")
+
+
+class Room:
+    def __init__(self, c1: Coord, c2: Coord) -> None:
+        self._c1 = c1
+        self._c2 = c2
+
+    def __repr__(self) -> str:
+        return f"[<{self._c1.x},{self._c1.y}>,<{self._c2.x},{self._c2.y}>]"
+
+    def __contains__(self, c: Coord) -> bool:
+        return (
+            c.x >= self._c1.x
+            and c.x <= self._c2.x
+            and c.y >= self._c1.y
+            and c.y <= self._c2.y
+        )
+
+    def center(self) -> Coord:
+        res: Coord = Coord(0, 0)
+        res.x = (self._c1.x + self._c2.x) // 2
+        res.y = (self._c1.y + self._c2.y) // 2
+        return res
+
+    def intersect(self, r: "Room") -> bool:
+        c3: Coord = Coord(self._c2.x, self._c1.y)
+        c4: Coord = Coord(self._c1.x, self._c2.y)
+        return self._c1 in r or self._c2 in r or c3 in r or c4 in r
+
+    def randCoord(self) -> Coord:
+        x: int = random.randint(self._c1.x, self._c2.x)
+        y: int = random.randint(self._c1.y, self._c2.y)
+        return Coord(x, y)
+
+    def randEmptyCoord(self, map: Map) -> Coord:
+        while True:
+            res: Coord = self.randCoord()
+            if map.get(res) == map.ground and res != self.center():
+                return res
+
+    def decorate(self, map: Map) -> None:
+        randCoordEquip: Coord = self.randEmptyCoord(map)
+        randEquip: Equipment = theGame().randEquipment()
+        map.put(randCoordEquip, randEquip)
+
+        randCoordMonster: Coord = self.randEmptyCoord(map)
+        randMonster: Creature = theGame().randMonster()
+        map.put(randCoordMonster, randMonster)
 
 
 def theGame(game=Game()) -> Game:
