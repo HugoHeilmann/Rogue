@@ -1,4 +1,4 @@
-from Maping.Map import Map
+from Element.Elements import theGame
 
-m = Map(20)
-m.play()
+g = theGame()
+g.play()
