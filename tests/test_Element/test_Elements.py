@@ -38,6 +38,19 @@ def test_meet_equipment():
     assert (o in h._inventory) == True
 
 
+def test_use_equipment():
+    def kill(item, hero):
+        hero._hp = 0
+        item._name = "poison"
+        return True
+
+    e = Equipment("water", usage=kill)
+    h = Hero(name="Romeo")
+    assert e.use(h) == True
+    assert h.description() == "<Romeo>(0)[]"
+    assert e.description() == "<poison>"
+
+
 # Creature
 def test_initialisation_creature():
     o = Creature("Goblin", 10)
