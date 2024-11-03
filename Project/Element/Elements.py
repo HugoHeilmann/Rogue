@@ -376,6 +376,13 @@ class Game:
     def randMonster(self) -> Creature:
         return self.randElement(Game.monsters)
 
+    def select(self, l: List[Equipment]) -> Equipment:
+        print("Choose item> " + str([str(l.index(e)) + ": " + e._name for e in l]))
+        c: str = getch()
+        if c.isdigit() and int(c) in range(len(l)):
+            return l[int(c)]
+        return None
+
 
 class Stairs(Element):
     def __init__(self, name="Stairs", abbrv="E") -> None:
@@ -388,3 +395,33 @@ class Stairs(Element):
 
 def theGame(game=Game()):
     return game
+
+
+def _find_getch():
+    """Single char input, only works only on mac/linux/windows OS terminals"""
+    try:
+        import termios
+    except ImportError:
+        # Non-POSIX. Return msvcrt's (Windows') getch.
+        import msvcrt
+
+        return msvcrt.getch
+
+    # POSIX system. Create and return a getch that manipulates the tty.
+    import sys
+    import tty
+
+    def _getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+    return _getch
+
+
+getch = _find_getch()
