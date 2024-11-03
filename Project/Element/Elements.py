@@ -89,6 +89,14 @@ class Hero(Creature):
         if not isinstance(elem, Equipment):
             raise TypeError("Not in equipment")
 
+    def use(self, item: Equipment):
+        if not isinstance(item, Equipment):
+            raise TypeError("Not an equipment")
+        if item not in self._inventory:
+            raise ValueError("Not in inventory")
+        if Equipment.use(item, self):
+            self._inventory.remove(item)
+
 
 class Room:
     def __init__(self, c1: Coord, c2: Coord) -> None:
@@ -333,9 +341,10 @@ class Game:
         "s": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
         "q": lambda hero: theGame()._floor.move(hero, Coord(-1, 0)),
         "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
-        "i": lambda: theGame().addMessage(theGame()._hero.fullDescrition()),
-        "k": lambda: theGame()._hero.__setattr__("_hp", 0),
-        "": lambda: None,
+        "i": lambda hero: theGame().addMessage(hero.fullDescrition()),
+        "k": lambda hero: hero.__setattr__("_hp", 0),
+        "u": lambda hero: hero.use(theGame().select(hero._inventory)),
+        " ": lambda: None,
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
