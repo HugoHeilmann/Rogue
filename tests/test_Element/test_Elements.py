@@ -122,6 +122,33 @@ def test_initialisation_game():
     assert str(Game.monsters) == "{0: [G, W], 1: [O, B], 5: [D]}"
 
 
+def test_actions():
+    m = Map(5)
+    m._mat = [
+        [" ", ".", ".", ".", " "],
+        [" ", ".", ".", ".", " "],
+        [" ", " ", ".", " ", " "],
+        [" ", ".", ".", ".", " "],
+        [" ", ".", ".", ".", " "],
+    ]
+    m._elem = {}
+    m.put(Coord(1, 3), m._hero)
+    theGame()._floor = m
+    assert m.pos(m._hero) == Coord(1, 3)
+    Game._actions["s"](m._hero)
+    assert m.pos(m._hero) == Coord(1, 4)
+    Game._actions["s"](m._hero)
+    assert m.pos(m._hero) == Coord(1, 4)
+    Game._actions["z"](m._hero)
+    assert m.pos(m._hero) == Coord(1, 3)
+    Game._actions["z"](m._hero)
+    assert m.pos(m._hero) == Coord(1, 3)
+    Game._actions["d"](m._hero)
+    assert m.pos(m._hero) == Coord(2, 3)
+    Game._actions["q"](m._hero)
+    assert m.pos(m._hero) == Coord(1, 3)
+
+
 def test_buildFloor():
     random.seed(42)
     g = Game()
