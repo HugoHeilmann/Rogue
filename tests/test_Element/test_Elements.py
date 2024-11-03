@@ -122,6 +122,18 @@ def test_hero_full_description():
     )
 
 
+def test_use():
+    h = Hero()
+    s = Equipment("sword")
+    p = Equipment("potion", usage=lambda x, y: True)
+    h.take(s)
+    h.take(p)
+    assert h.description() == "<Hero>(10)[s, p]"
+    h.use(s)
+    h.use(p)
+    assert h.description() == "<Hero>(10)[s]"
+
+
 # Game
 def test_initialisation_game():
     assert str(Game()._hero) == "@"
