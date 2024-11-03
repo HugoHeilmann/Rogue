@@ -317,6 +317,15 @@ class Game:
         1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
         5: [Creature("Dragon", 20, strength=3)],
     }
+    _actions = {
+        "z": lambda hero: theGame()._floor.move(hero, Coord(0, -1)),
+        "s": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
+        "q": lambda hero: theGame()._floor.move(hero, Coord(-1, 0)),
+        "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
+        "i": lambda: theGame().addMessage(theGame()._hero.fullDescrition()),
+        "k": lambda: theGame()._hero.__setattr__("_hp", 0),
+        "": lambda: None,
+    }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
         self._hero = hero
