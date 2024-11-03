@@ -25,6 +25,21 @@ class Element(metaclass=abc.ABCMeta):
         raise NotImplementedError("Abstract method")
 
 
+def heal(creature: "Creature") -> bool:
+    creature._hp += 3
+    return True
+
+
+def teleport(creature: "Creature", unique):
+    start = theGame()._floor.pos(creature)
+    room = random.choice(theGame()._floor._rooms)
+    arrival = room.randEmptyCoord(theGame()._floor)
+    theGame()._floor._mat[start.y][start.x] = Map.ground
+    theGame()._floor._mat[arrival.y][arrival.x] = creature
+    theGame()._floor._elem[creature] = arrival
+    return unique
+
+
 class Equipment(Element):
     def __init__(self, name: str, abbrv: str = "", usage=None) -> None:
         Element.__init__(self, name, abbrv)
@@ -327,9 +342,21 @@ class Map:
 
 class Game:
     equipments = {
-        0: [Equipment("potion", "!"), Equipment("gold", "o")],
-        1: [Equipment("sword"), Equipment("bow")],
+        0: [
+            Equipment("potion", "!", usage=lambda creature: heal(creature)),
+            Equipment("gold", "o"),
+        ],
+        1: [
+            Equipment("sword"),
+            Equipment("bow"),
+            Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
+        ],
         2: [Equipment("chainmail")],
+        3: [
+            Equipment(
+                "portoloin", "w", usage=lambda creature: teleport(creature, False)
+            )
+        ],
     }
     monsters = {
         0: [Creature("Goblin", 4), Creature("Bat", 2, "W")],
