@@ -62,6 +62,17 @@ class Hero(Creature):
     def description(self) -> str:
         return Creature.description(self) + str(self._inventory)
 
+    def fullDescrition(self) -> str:
+        res: str = ""
+        dict = self.__dict__
+        print("dict : ", dict)
+        res += "> name : " + dict["_name"] + "\n"
+        res += "> abbrv : " + dict["_abbrv"] + "\n"
+        res += "> hp : " + str(dict["_hp"]) + "\n"
+        res += "> strength : " + str(dict["_strength"]) + "\n"
+        res += "> INVENTORY : " + str([item._name for item in self._inventory])
+        return res
+
     def take(self, elem: Equipment) -> None:
         self._inventory.append(elem)
         if isinstance(elem, Equipment) == False:
