@@ -26,13 +26,24 @@ class Element(metaclass=abc.ABCMeta):
 
 
 class Equipment(Element):
-    def __init__(self, name: str, abbrv: str = "") -> None:
+    def __init__(self, name: str, abbrv: str = "", usage=None) -> None:
         Element.__init__(self, name, abbrv)
+        self.usage = usage
 
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage("You pick up a " + str(self._name))
         hero.take(self)
         return True
+
+    def use(self, creature: "Creature"):
+        if self.usage != None:
+            theGame().addMessage(
+                "The " + str(creature._name) + " uses the " + str(self._name)
+            )
+            return self.usage(self, creature)
+        else:
+            theGame().addMessage("The " + str(self._name) + " is not usable")
+            return False
 
 
 class Creature(Element):
@@ -75,7 +86,7 @@ class Hero(Creature):
 
     def take(self, elem: Equipment) -> None:
         self._inventory.append(elem)
-        if isinstance(elem, Equipment) == False:
+        if not isinstance(elem, Equipment):
             raise TypeError("Not in equipment")
 
 
@@ -289,7 +300,7 @@ class Map:
                 self.addRoom(newPlace)
 
     def checkCoord(self, c) -> Union[None, TypeError, IndexError]:
-        if isinstance(c, Coord) == False:
+        if not isinstance(c, Coord):
             raise TypeError("Not a Coord")
         if c not in self:
             raise IndexError("Out of map coord")
