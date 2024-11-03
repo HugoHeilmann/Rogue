@@ -1,10 +1,9 @@
 import abc
 import copy
-import math
 import random
 from typing import Dict, List, Union
 
-from ..Maping.Coord import Coord
+from Maping.Coord import Coord
 
 
 class Element(metaclass=abc.ABCMeta):
@@ -364,14 +363,24 @@ class Game:
         5: [Creature("Dragon", 20, strength=3)],
     }
     _actions = {
+        # Déplacements diagonaux
+        "a": lambda hero: theGame()._floor.move(hero, Coord(-1, -1)),
+        "e": lambda hero: theGame()._floor.move(hero, Coord(1, -1)),
+        "w": lambda hero: theGame()._floor.move(hero, Coord(-1, 1)),
+        "c": lambda hero: theGame()._floor.move(hero, Coord(1, 1)),
+        # Déplacements latéraux
         "z": lambda hero: theGame()._floor.move(hero, Coord(0, -1)),
-        "s": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
+        "x": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
         "q": lambda hero: theGame()._floor.move(hero, Coord(-1, 0)),
         "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
+        # Pas d'action
+        "s": lambda hero: None,
+        # Description complète
         "i": lambda hero: theGame().addMessage(hero.fullDescrition()),
+        # Suicide
         "k": lambda hero: hero.__setattr__("_hp", 0),
+        # Utiliser un objet
         "u": lambda hero: hero.use(theGame().select(hero._inventory)),
-        " ": lambda: None,
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
@@ -419,6 +428,20 @@ class Game:
             return l[int(c)]
         return None
 
+    def play(self) -> None:
+        self.buildFloor()
+        print("--- Welcome Hero! ---")
+        while self._hero._hp > 0:
+            print()
+            print(self._floor)
+            print(self._hero.description())
+            print(self.readMessages())
+            c = getch()
+            if c in Game._actions:
+                Game._actions[c](self._hero)
+            self._floor.moveAllMonsters()
+        print("--- Game Over ---")
+
 
 class Stairs(Element):
     def __init__(self, name="Stairs", abbrv="E") -> None:
@@ -433,31 +456,8 @@ def theGame(game=Game()):
     return game
 
 
-def _find_getch():
-    """Single char input, only works only on mac/linux/windows OS terminals"""
-    try:
-        import termios
-    except ImportError:
-        # Non-POSIX. Return msvcrt's (Windows') getch.
-        import msvcrt
-
-        return msvcrt.getch
-
-    # POSIX system. Create and return a getch that manipulates the tty.
-    import sys
-    import tty
-
-    def _getch():
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(fd)
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-    return _getch
+import msvcrt
 
 
-getch = _find_getch()
+def getch():
+    return msvcrt.getch().decode("utf-8")
