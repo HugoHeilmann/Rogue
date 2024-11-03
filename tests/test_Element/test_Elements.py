@@ -102,6 +102,13 @@ def test_hero_description():
     assert h.description() == "<Hero>(10)[]"
 
 
+def test_hero_full_description():
+    assert (
+        Hero().fullDescrition()
+        == "> name : Hero\n> abbrv : @\n> hp : 10\n> strength : 2\n> INVENTORY : []"
+    )
+
+
 # Game
 def test_initialisation_game():
     assert str(Game()._hero) == "@"
