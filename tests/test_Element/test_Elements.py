@@ -143,7 +143,7 @@ def test_initialisation_game():
     assert Game(level=3)._level == 3
     assert str(Game(hero=Hero("Conan"))._hero) == "@"
 
-    assert str(Game.equipments) == "{0: [!, o], 1: [s, b], 2: [c]}"
+    assert str(Game.equipments) == "{0: [!, o], 1: [s, b, !], 2: [c], 3: [w]}"
     assert str(Game.monsters) == "{0: [G, W], 1: [O, B], 5: [D]}"
 
 
