@@ -61,10 +61,13 @@ class Equipment(Element):
 
 
 class Creature(Element):
-    def __init__(self, name: str, hp: int, abbrv: str = "", strength: int = 1) -> None:
+    def __init__(
+        self, name: str, hp: int, abbrv: str = "", strength: int = 1, speed: int = 1
+    ) -> None:
         Element.__init__(self, name, abbrv)
         self._hp = hp
         self._strength = strength
+        self._speed = speed
 
     def description(self) -> str:
         return Element.description(self) + "(" + str(self._hp) + ")"
@@ -79,9 +82,14 @@ class Creature(Element):
 
 class Hero(Creature):
     def __init__(
-        self, name: str = "Hero", hp: int = 10, abbrv: str = "@", strength: int = 2
+        self,
+        name: str = "Hero",
+        hp: int = 10,
+        abbrv: str = "@",
+        strength: int = 2,
+        speed: int = 1,
     ) -> None:
-        Creature.__init__(self, name, hp, abbrv, strength)
+        Creature.__init__(self, name, hp, abbrv, strength, speed)
         self._inventory = []
 
     def description(self) -> str:
@@ -95,6 +103,7 @@ class Hero(Creature):
         res += "> abbrv : " + dict["_abbrv"] + "\n"
         res += "> hp : " + str(dict["_hp"]) + "\n"
         res += "> strength : " + str(dict["_strength"]) + "\n"
+        res += "> speed : " + str(dict["_speed"]) + "\n"
         res += "> INVENTORY : " + str([item._name for item in self._inventory])
         return res
 
@@ -334,14 +343,16 @@ class Map:
     def moveAllMonsters(self) -> None:
         target: Coord = self.pos(self._hero)
         for elem in self._elem:
-            badGuy: Coord = self.pos(elem)
-            if type(elem) == Creature and Coord.distance(badGuy, target) <= 6:
-                c: Coord = Coord.direction(badGuy, target)
-                if (
-                    self.get(self.pos(elem) + c) == self.ground
-                    or self.get(self.pos(elem) + c) == self._hero
-                ):
-                    self.move(elem, Coord.direction(badGuy, target))
+            if type(elem) == Creature:
+                for _ in range(elem._speed):
+                    badGuy: Coord = self.pos(elem)
+                    if Coord.distance(badGuy, target) <= 6:
+                        c: Coord = Coord.direction(badGuy, target)
+                        if (
+                            self.get(self.pos(elem) + c) == self.ground
+                            or self.get(self.pos(elem) + c) == self._hero
+                        ):
+                            self.move(elem, Coord.direction(badGuy, target))
 
 
 class Game:
@@ -359,9 +370,15 @@ class Game:
         3: [
             Equipment(
                 "portoloin", "w", usage=lambda creature: teleport(creature, False)
-            )
+            ),
+            Equipment(
+                "nimbus 2000",
+                "→",
+                usage=lambda creature: creature.__setattr__("_speed", 2),
+            ),
         ],
     }
+
     monsters = {
         0: [Creature("Goblin", 4), Creature("Bat", 2, "W")],
         1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
@@ -439,14 +456,17 @@ class Game:
         self.buildFloor()
         print("--- Welcome Hero! ---")
         while self._hero._hp > 0:
-            os.system("cls")
-            print()
-            print(self._floor)
-            print(self._hero.description())
-            print(self.readMessages())
-            c = getch()
-            if c in Game._actions:
-                Game._actions[c](self._hero)
+            for _ in range(self._floor._hero._speed):
+                os.system("cls")
+                print()
+                print(self._floor)
+                print(self._hero.description())
+                print(self.readMessages())
+                c = getch()
+                if c in Game._actions:
+                    Game._actions[c](self._hero)
+                    if c == "k":
+                        break
             self._floor.moveAllMonsters()
         print("--- Game Over ---")
 
