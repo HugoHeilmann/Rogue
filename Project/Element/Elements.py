@@ -54,7 +54,7 @@ class Equipment(Element):
             theGame().addMessage(
                 "The " + str(creature._name) + " uses the " + str(self._name)
             )
-            return self.usage(self, creature)
+            return self.usage(creature)
         else:
             theGame().addMessage("The " + str(self._name) + " is not usable")
             return False
@@ -336,7 +336,9 @@ class Map:
         for elem in self._elem:
             badGuy: Coord = self.pos(elem)
             if type(elem) == Creature and Coord.distance(badGuy, target) <= 6:
-                self.move(elem, Coord.direction(badGuy, target))
+                c: Coord = Coord.direction(badGuy, target)
+                if self.get(self.pos(elem) + c) == self.ground:
+                    self.move(elem, Coord.direction(badGuy, target))
 
 
 class Game:
@@ -370,11 +372,11 @@ class Game:
         "c": lambda hero: theGame()._floor.move(hero, Coord(1, 1)),
         # Déplacements latéraux
         "z": lambda hero: theGame()._floor.move(hero, Coord(0, -1)),
-        "x": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
+        "s": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
         "q": lambda hero: theGame()._floor.move(hero, Coord(-1, 0)),
         "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
         # Pas d'action
-        "s": lambda hero: None,
+        "x": lambda hero: None,
         # Description complète
         "i": lambda hero: theGame().addMessage(hero.fullDescrition()),
         # Suicide
