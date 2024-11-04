@@ -337,7 +337,10 @@ class Map:
             badGuy: Coord = self.pos(elem)
             if type(elem) == Creature and Coord.distance(badGuy, target) <= 6:
                 c: Coord = Coord.direction(badGuy, target)
-                if self.get(self.pos(elem) + c) == self.ground:
+                if (
+                    self.get(self.pos(elem) + c) == self.ground
+                    or self.get(self.pos(elem) + c) == self._hero
+                ):
                     self.move(elem, Coord.direction(badGuy, target))
 
 
@@ -431,9 +434,12 @@ class Game:
         return None
 
     def play(self) -> None:
+        import os
+
         self.buildFloor()
         print("--- Welcome Hero! ---")
         while self._hero._hp > 0:
+            os.system("cls")
             print()
             print(self._floor)
             print(self._hero.description())

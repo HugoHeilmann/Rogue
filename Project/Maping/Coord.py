@@ -24,12 +24,26 @@ class Coord:
         return math.sqrt(sqrx + sqry)
 
     def direction(self, other: "Coord") -> "Coord":
-        diff: int = self - other
-        cos = diff.x / self.distance(other)
-        if cos > 1 / math.sqrt(2):
-            return Coord(-1, 0)
-        if cos < -1 / math.sqrt(2):
-            return Coord(1, 0)
-        if diff.y > 0:
-            return Coord(0, -1)
-        return Coord(0, 1)
+        diff: Coord = other - self
+        dist = self.distance(other)
+
+        if dist == 0:
+            return Coord(0, 0)
+
+        norm_x = diff.x / dist
+        norm_y = diff.y / dist
+
+        direction_x = 0
+        direction_y = 0
+
+        if norm_x > 0:
+            direction_x = 1
+        elif norm_x < 0:
+            direction_x = -1
+
+        if norm_y > 0:
+            direction_y = 1
+        elif norm_y < 0:
+            direction_y = -1
+
+        return Coord(direction_x, direction_y)
