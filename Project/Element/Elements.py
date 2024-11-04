@@ -39,6 +39,18 @@ def teleport(creature: "Creature", unique):
     return unique
 
 
+def setStrength(creature: "Creature", strength: int):
+    creature._strength = strength
+
+
+def setDefense(creature: "Creature", defense: int):
+    creature._defense = defense
+
+
+def setSpeed(creature: "Creature", speed: int):
+    creature._speed = speed
+
+
 class Equipment(Element):
     def __init__(self, name: str, abbrv: str = "", usage=None) -> None:
         Element.__init__(self, name, abbrv)
@@ -62,18 +74,25 @@ class Equipment(Element):
 
 class Creature(Element):
     def __init__(
-        self, name: str, hp: int, abbrv: str = "", strength: int = 1, speed: int = 1
+        self,
+        name: str,
+        hp: int,
+        abbrv: str = "",
+        strength: int = 1,
+        defense: int = 0,
+        speed: int = 1,
     ) -> None:
         Element.__init__(self, name, abbrv)
         self._hp = hp
         self._strength = strength
+        self._defense = defense
         self._speed = speed
 
     def description(self) -> str:
         return Element.description(self) + "(" + str(self._hp) + ")"
 
     def meet(self, other: "Creature") -> bool:
-        self._hp -= other._strength
+        self._hp -= other._strength - self._defense
         theGame().addMessage(
             "The " + str(other._name) + " hits the " + str(self.description())
         )
@@ -87,9 +106,10 @@ class Hero(Creature):
         hp: int = 10,
         abbrv: str = "@",
         strength: int = 2,
+        defense: int = 0,
         speed: int = 1,
     ) -> None:
-        Creature.__init__(self, name, hp, abbrv, strength, speed)
+        Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
         self._inventory = []
 
     def description(self) -> str:
@@ -103,6 +123,7 @@ class Hero(Creature):
         res += "> abbrv : " + dict["_abbrv"] + "\n"
         res += "> hp : " + str(dict["_hp"]) + "\n"
         res += "> strength : " + str(dict["_strength"]) + "\n"
+        res += "> defense : " + str(dict["_defense"]) + "\n"
         res += "> speed : " + str(dict["_speed"]) + "\n"
         res += "> INVENTORY : " + str([item._name for item in self._inventory])
         return res
@@ -362,11 +383,19 @@ class Game:
             Equipment("gold", "o"),
         ],
         1: [
-            Equipment("sword"),
+            Equipment(
+                "sword",
+                usage=lambda creature: setStrength(creature, creature._strength + 1),
+            ),
             Equipment("bow"),
             Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
         ],
-        2: [Equipment("chainmail")],
+        2: [
+            Equipment(
+                "chainmail",
+                usage=lambda creature: setDefense(creature, creature._defense + 1),
+            )
+        ],
         3: [
             Equipment(
                 "portoloin", "w", usage=lambda creature: teleport(creature, False)
@@ -374,7 +403,7 @@ class Game:
             Equipment(
                 "nimbus 2000",
                 "→",
-                usage=lambda creature: creature.__setattr__("_speed", 2),
+                usage=lambda creature: setSpeed(creature, creature._speed + 1),
             ),
         ],
     }
