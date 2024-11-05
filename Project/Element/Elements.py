@@ -65,6 +65,9 @@ class Equipment(Element):
         self._power = power
         self._requipable = requipable
 
+    def description(self) -> str:
+        return super().description() + f"({self._power})"
+
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage("You pick up a " + str(self._name))
         hero.take(self)
@@ -90,19 +93,19 @@ class Requip:
         self,
         helmet: Equipment = None,
         armor: Equipment = None,
-        schoes: Equipment = None,
+        shoes: Equipment = None,
         weapon: Equipment = None,
     ):
         self._helmet = helmet
         self._armor = armor
-        self._schoes = schoes
+        self._shoes = shoes
         self._weapon = weapon
 
     def getAll(self) -> Dict[str, Equipment]:
         return {
             "helmet": self._helmet,
             "armor": self._armor,
-            "schoes": self._schoes,
+            "shoes": self._shoes,
             "weapon": self._weapon,
         }
 
@@ -112,17 +115,11 @@ class Requip:
             self._helmet = item
         elif part == "armor":
             self._armor = item
-        elif part == "schoes":
-            self._schoes = item
+        elif part == "shoes":
+            self._shoes = item
         elif part == "weapon":
             self._weapon = item
-        theGame().addMessage(f"You've requiped <{item._name}>")
-
-    def requipEffect(self, item: Equipment, hero: "Hero"):
-        if item._requipable == "weapon":
-            setStrength(hero, hero._strength + item._power)
-        else:
-            setDefense(hero, hero._defense + item._power)
+        theGame().addMessage(f"You've requiped {item.description()}")
 
 
 class Creature(Element):
@@ -185,7 +182,7 @@ class Hero(Creature):
         res += "> REQUIPMENTS : "
         for piece, equipment in self._requip.getAll().items():
             if equipment != None:
-                res += f"{piece} -> {equipment._name}, "
+                res += f"{piece} -> {equipment.description()}, "
         res += "\n> INVENTORY : " + str([item._name for item in self._inventory])
         return res
 
@@ -203,7 +200,7 @@ class Hero(Creature):
             self._inventory.remove(item)
 
     def requipment(self, item: Equipment) -> None:
-        self._requip.requipEffect(item, self)
+        item.usage(self)
         self._requip.add(item)
 
     def toss(self) -> None:
@@ -466,7 +463,19 @@ class Game:
                 "chainmail",
                 usage=lambda creature: setDefense(creature, creature._defense + 1),
                 requipable="armor",
-            )
+            ),
+            Equipment(
+                "iron helmet",
+                "h",
+                usage=lambda creature: setDefense(creature, creature._defense + 1),
+                requipable="helmet",
+            ),
+            Equipment(
+                "spike shoes",
+                "k",
+                usage=lambda creature: setStrength(creature, creature._strength + 1),
+                requipable="shoes",
+            ),
         ],
         3: [
             Equipment(
@@ -571,6 +580,7 @@ class Game:
                     if c == "k":
                         break
             self._floor.moveAllMonsters()
+        print(self.readMessages())
         print("--- Game Over ---")
 
 
