@@ -71,7 +71,7 @@ class Equipment(Element):
         self._requipable = requipable
 
     def description(self) -> str:
-        return super().description() + f"({self._power})"
+        return super().description() + f"({self._usefullPower})"
 
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage("You pick up a " + str(self._name))
@@ -156,6 +156,21 @@ class Creature(Element):
         return self._hp <= 0
 
 
+class Archery(Creature):
+    def __init__(
+        self,
+        name: str,
+        hp: int,
+        abbrv: str = "",
+        strength: int = 1,
+        defense: int = 0,
+        speed: int = 1,
+    ) -> None:
+        Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+
+    # TODO Implémenter le système de tir lors de l'appel de moveAllMonsters
+
+
 class Hero(Creature):
     def __init__(
         self,
@@ -208,7 +223,10 @@ class Hero(Creature):
         item: Equipment = theGame().select(self._inventory)
         direction: Coord = theGame().selectCoord(Map.dir_arrow)
         location = theGame()._floor.pos(self) + direction
-        while theGame()._floor.get(location) == Map.ground:
+        while (
+            location in theGame()._floor
+            and theGame()._floor.get(location) == Map.ground
+        ):
             location += direction
         if isinstance(theGame()._floor.get(location), Creature):
             dead: bool = theGame()._floor.get(location).meet(item)
@@ -493,7 +511,7 @@ class Game:
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="weapon",
             ),
-            Equipment("bow", thrower=True),
+            Equipment("light bow", "b", thrower=True),
             Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
         ],
         2: [
@@ -523,6 +541,7 @@ class Game:
                 "nimbus 2000",
                 "→",
                 usage=lambda creature: setSpeed(creature, creature._speed + 1),
+                requipable="shoes",
             ),
         ],
     }
