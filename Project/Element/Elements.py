@@ -39,8 +39,9 @@ def teleport(creature: "Creature", unique):
     return unique
 
 
-def setStrength(creature: "Creature", strength: int):
+def setStrength(creature: "Creature", strength: int) -> bool:
     creature._strength = strength
+    return True
 
 
 def setDefense(creature: "Creature", defense: int):
@@ -52,9 +53,18 @@ def setSpeed(creature: "Creature", speed: int):
 
 
 class Equipment(Element):
-    def __init__(self, name: str, abbrv: str = "", usage=None) -> None:
+    def __init__(
+        self,
+        name: str,
+        abbrv: str = "",
+        usage=None,
+        strength: int = 1,
+        thrower: bool = False,
+    ) -> None:
         Element.__init__(self, name, abbrv)
         self.usage = usage
+        self._strength = strength
+        self._thrower = thrower
 
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage("You pick up a " + str(self._name))
@@ -91,7 +101,7 @@ class Creature(Element):
     def description(self) -> str:
         return Element.description(self) + "(" + str(self._hp) + ")"
 
-    def meet(self, other: "Creature") -> bool:
+    def meet(self, other: Union["Creature", Equipment]) -> bool:
         self._hp -= other._strength - self._defense
         theGame().addMessage(
             "The " + str(other._name) + " hits the " + str(self.description())
@@ -140,6 +150,20 @@ class Hero(Creature):
             raise ValueError("Not in inventory")
         if Equipment.use(item, self):
             self._inventory.remove(item)
+
+    def throw(self) -> bool:
+        item: Equipment = theGame().select(self._inventory)
+        direction: Coord = theGame().selectCoord(Map.dir_arrow)
+        location = theGame()._floor.pos(self) + direction
+        while theGame()._floor.get(location) == Map.ground:
+            location += direction
+        if isinstance(theGame()._floor.get(location), Creature):
+            dead: bool = theGame()._floor.get(location).meet(item)
+            if dead:
+                theGame()._floor.rm(location)
+        if not item._thrower:
+            self._inventory.remove(item)
+        return isinstance(theGame()._floor.get(location), Creature)
 
 
 class Room:
@@ -203,7 +227,26 @@ class Room:
 class Map:
     ground = "."
     empty = " "
-    dir = {"z": Coord(0, -1), "s": Coord(0, 1), "d": Coord(1, 0), "q": Coord(-1, 0)}
+    dir = {
+        "z": Coord(0, -1),
+        "s": Coord(0, 1),
+        "d": Coord(1, 0),
+        "q": Coord(-1, 0),
+        "a": Coord(-1, -1),
+        "e": Coord(1, -1),
+        "w": Coord(-1, 1),
+        "c": Coord(1, 1),
+    }
+    dir_arrow = {
+        "z": "↑",
+        "s": "↓",
+        "d": "→",
+        "q": "←",
+        "a": "↖",
+        "e": "↗",
+        "w": "↙",
+        "c": "↘",
+    }
 
     def __init__(self, size: int = 20, hero: Hero = Hero(), nbrooms: int = 7) -> None:
         self._mat = []
@@ -211,7 +254,7 @@ class Map:
         self._roomsToReach: List[Room] = []
         self._elem: Dict[Element, Coord] = {}
         self._hero = hero
-        for i in range(size):
+        for _ in range(size):
             self._mat.append([Map.empty] * size)
         self.generateRooms(nbrooms)
         self.reachAllRooms()
@@ -387,7 +430,7 @@ class Game:
                 "sword",
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
             ),
-            Equipment("bow"),
+            Equipment("bow", thrower=True),
             Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
         ],
         2: [
@@ -424,6 +467,8 @@ class Game:
         "s": lambda hero: theGame()._floor.move(hero, Coord(0, 1)),
         "q": lambda hero: theGame()._floor.move(hero, Coord(-1, 0)),
         "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
+        # Lancer un objet
+        "j": lambda hero: hero.throw(),
         # Pas d'action
         "x": lambda hero: None,
         # Description complète
@@ -472,11 +517,22 @@ class Game:
     def randMonster(self) -> Creature:
         return self.randElement(Game.monsters)
 
-    def select(self, l: List[Equipment]) -> Equipment:
+    def select(self, l: List) -> Equipment:
         print("Choose item> " + str([str(l.index(e)) + ": " + e._name for e in l]))
         c: str = getch()
         if c.isdigit() and int(c) in range(len(l)):
             return l[int(c)]
+        return None
+
+    def selectCoord(self, d: Dict) -> Coord:
+        print(
+            "Choose direction> "
+            + str([str(i) + ": " + str(d[key]) for i, key in enumerate(d)])
+        )
+        c: str = getch()
+        if c.isdigit() and int(c) in range(len(d)):
+            key = list(d.keys())[int(c)]
+            return Map.dir[key]
         return None
 
     def play(self) -> None:
