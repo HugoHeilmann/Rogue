@@ -52,9 +52,18 @@ def setSpeed(creature: "Creature", speed: int):
 
 
 class Equipment(Element):
-    def __init__(self, name: str, abbrv: str = "", usage=None) -> None:
+    def __init__(
+        self,
+        name: str,
+        abbrv: str = "",
+        usage=None,
+        power: int = 1,
+        requipable: str = "",
+    ) -> None:
         Element.__init__(self, name, abbrv)
         self.usage = usage
+        self._power = power
+        self._requipable = requipable
 
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage("You pick up a " + str(self._name))
@@ -66,10 +75,54 @@ class Equipment(Element):
             theGame().addMessage(
                 "The " + str(creature._name) + " uses the " + str(self._name)
             )
-            return self.usage(creature)
+            if self._requipable != "" and isinstance(creature, Hero):
+                creature.requipment(self)
+                return True
+            else:
+                return self.usage(creature)
         else:
             theGame().addMessage("The " + str(self._name) + " is not usable")
             return False
+
+
+class Requip:
+    def __init__(
+        self,
+        helmet: Equipment = None,
+        armor: Equipment = None,
+        schoes: Equipment = None,
+        weapon: Equipment = None,
+    ):
+        self._helmet = helmet
+        self._armor = armor
+        self._schoes = schoes
+        self._weapon = weapon
+
+    def getAll(self) -> Dict[str, Equipment]:
+        return {
+            "helmet": self._helmet,
+            "armor": self._armor,
+            "schoes": self._schoes,
+            "weapon": self._weapon,
+        }
+
+    def add(self, item: Equipment) -> None:
+        part: str = item._requipable
+        if part == "helmet":
+            self._helmet = item
+        elif part == "armor":
+            self._armor = item
+        elif part == "schoes":
+            self._schoes = item
+        elif part == "weapon":
+            self._weapon = item
+        theGame().addMessage(f"You've requiped <{item._name}>")
+
+    def requipEffect(self, item: Equipment, hero: "Hero"):
+        if item._requipable == "weapon":
+            setStrength(hero, hero._strength + item._power)
+        else:
+            setDefense(hero, hero._defense + item._power)
 
 
 class Creature(Element):
@@ -92,7 +145,9 @@ class Creature(Element):
         return Element.description(self) + "(" + str(self._hp) + ")"
 
     def meet(self, other: "Creature") -> bool:
-        self._hp -= other._strength - self._defense
+        damageMin: int = 1
+        damageCalculate: int = other._strength - self._defense
+        self._hp -= max(damageMin, damageCalculate)
         theGame().addMessage(
             "The " + str(other._name) + " hits the " + str(self.description())
         )
@@ -108,8 +163,10 @@ class Hero(Creature):
         strength: int = 2,
         defense: int = 0,
         speed: int = 1,
+        requip: Requip = Requip(),
     ) -> None:
         Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+        self._requip = requip
         self._inventory = []
 
     def description(self) -> str:
@@ -125,7 +182,11 @@ class Hero(Creature):
         res += "> strength : " + str(dict["_strength"]) + "\n"
         res += "> defense : " + str(dict["_defense"]) + "\n"
         res += "> speed : " + str(dict["_speed"]) + "\n"
-        res += "> INVENTORY : " + str([item._name for item in self._inventory])
+        res += "> REQUIPMENTS : "
+        for piece, equipment in self._requip.getAll().items():
+            if equipment != None:
+                res += f"{piece} -> {equipment._name}, "
+        res += "\n> INVENTORY : " + str([item._name for item in self._inventory])
         return res
 
     def take(self, elem: Equipment) -> None:
@@ -140,6 +201,15 @@ class Hero(Creature):
             raise ValueError("Not in inventory")
         if Equipment.use(item, self):
             self._inventory.remove(item)
+
+    def requipment(self, item: Equipment) -> None:
+        self._requip.requipEffect(item, self)
+        self._requip.add(item)
+
+    def toss(self) -> None:
+        item = theGame().select(self._inventory)
+        self._inventory.remove(item)
+        theGame().addMessage(f"You've tossed <{item._name}>")
 
 
 class Room:
@@ -386,6 +456,7 @@ class Game:
             Equipment(
                 "sword",
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
+                requipable="weapon",
             ),
             Equipment("bow"),
             Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
@@ -394,6 +465,7 @@ class Game:
             Equipment(
                 "chainmail",
                 usage=lambda creature: setDefense(creature, creature._defense + 1),
+                requipable="armor",
             )
         ],
         3: [
@@ -432,6 +504,8 @@ class Game:
         "k": lambda hero: hero.__setattr__("_hp", 0),
         # Utiliser un objet
         "u": lambda hero: hero.use(theGame().select(hero._inventory)),
+        # Jeter un objet
+        "t": lambda hero: hero.toss(),
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
@@ -506,6 +580,7 @@ class Stairs(Element):
 
     def meet(self, hero: Hero) -> bool:
         theGame().addMessage(f"{hero._name} goes down")
+        theGame().buildFloor()
         return True
 
 
