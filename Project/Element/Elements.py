@@ -168,7 +168,20 @@ class Archery(Creature):
     ) -> None:
         Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
 
-    # TODO Implémenter le système de tir lors de l'appel de moveAllMonsters
+    def throw(self) -> None:
+        direction: Coord = Coord.direction(
+            theGame()._floor.pos(self), theGame()._floor.pos(theGame()._hero)
+        )
+        location = theGame()._floor.pos(self) + direction
+        while (
+            location in theGame()._floor
+            and theGame()._floor.get(location) == Map.ground
+        ):
+            location += direction
+        if location in theGame()._floor and isinstance(
+            theGame()._floor.get(location), Hero
+        ):
+            theGame()._hero.meet(self)
 
 
 class Hero(Creature):
@@ -219,7 +232,7 @@ class Hero(Creature):
         if Equipment.use(item, self):
             self._inventory.remove(item)
 
-    def throw(self) -> bool:
+    def throw(self) -> None:
         item: Equipment = theGame().select(self._inventory)
         direction: Coord = theGame().selectCoord(Map.dir_arrow)
         location = theGame()._floor.pos(self) + direction
@@ -234,7 +247,6 @@ class Hero(Creature):
                 theGame()._floor.rm(location)
         if not item._thrower:
             self._inventory.remove(item)
-        return isinstance(theGame()._floor.get(location), Creature)
 
     def requipment(self, item: Equipment) -> None:
         item.usage(self)
@@ -487,10 +499,12 @@ class Map:
     def moveAllMonsters(self) -> None:
         target: Coord = self.pos(self._hero)
         for elem in self._elem:
-            if type(elem) == Creature:
+            if isinstance(elem, Creature) and type(elem) != Hero:
                 for _ in range(elem._speed):
                     badGuy: Coord = self.pos(elem)
-                    if Coord.distance(badGuy, target) <= 6:
+                    if Coord.distance(badGuy, target) <= 4 and type(elem) == Archery:
+                        elem.throw()
+                    elif Coord.distance(badGuy, target) <= 6:
                         c: Coord = Coord.direction(badGuy, target)
                         if (
                             self.get(self.pos(elem) + c) == self.ground
@@ -547,7 +561,7 @@ class Game:
     }
 
     monsters = {
-        0: [Creature("Goblin", 4), Creature("Bat", 2, "W")],
+        0: [Creature("Goblin", 4), Creature("Bat", 2, "W"), Archery("Archer", 6)],
         1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
         5: [Creature("Dragon", 20, strength=3)],
     }
