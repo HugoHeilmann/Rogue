@@ -24,8 +24,48 @@ class Element(metaclass=abc.ABCMeta):
         raise NotImplementedError("Abstract method")
 
 
-def heal(creature: "Creature") -> bool:
-    creature._hp += 3
+def heal(creature: "Creature", power: int = 3) -> bool:
+    creature._hp += power
+    return True
+
+
+def manaHeal(hero: "Hero", power: int = 3) -> bool:
+    hero._mana += power
+    return True
+
+
+def hyperBeam(hero: "Hero", power: int) -> bool:
+    direction: Coord = theGame().selectCoord(Map.dir_arrow)
+    location = theGame()._floor.pos(hero) + direction
+    while location in theGame()._floor and theGame()._floor.get(location) != Map.empty:
+        c = theGame()._floor.get(location)
+        if isinstance(c, Creature):
+            c._hp -= power
+            theGame().addMessage("\nThe <final spark> hits the " + c.description())
+            if c._hp <= 0:
+                theGame()._floor.rm(location)
+        location += direction
+    return True
+
+
+def glacialStorm(hero: "Hero", power: int) -> bool:
+    position: Coord = theGame()._floor.pos(hero)
+
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            new_pos: Coord = Coord(position.x + dx, position.y + dy)
+            c = theGame()._floor.get(new_pos)
+            if (
+                new_pos in theGame()._floor
+                and isinstance(c, Creature)
+                and not isinstance(c, Hero)
+            ):
+                c._hp -= power
+                theGame().addMessage(
+                    "\nThe <glacial storm> hits the " + c.description()
+                )
+                if c._hp <= 0:
+                    theGame()._floor.rm(new_pos)
     return True
 
 
@@ -74,14 +114,14 @@ class Equipment(Element):
         return super().description() + f"({self._usefullPower})"
 
     def meet(self, hero: "Hero") -> bool:
-        theGame().addMessage("You pick up a " + str(self._name))
+        theGame().addMessage("\nYou pick up a " + str(self._name))
         hero.take(self)
         return True
 
     def use(self, creature: "Creature"):
         if self.usage != None:
             theGame().addMessage(
-                "The " + str(creature._name) + " uses the " + str(self._name)
+                "\nThe " + str(creature._name) + " uses the " + str(self._name)
             )
             if self._requipable != "" and isinstance(creature, Hero):
                 creature.requipment(self)
@@ -89,7 +129,34 @@ class Equipment(Element):
             else:
                 return self.usage(creature)
         else:
-            theGame().addMessage("The " + str(self._name) + " is not usable")
+            theGame().addMessage("\nThe " + str(self._name) + " is not usable")
+            return False
+
+
+class Spell:
+    def __init__(self, name: str, cost: int = 1, power: int = 3, usage=None):
+        self._name = name
+        self._cost = cost
+        self._power = power
+        self.usage = usage
+
+    def description(self) -> str:
+        return f"<{self._name}>({self._cost})[{self._power}]"
+
+    def use(self, hero: "Hero"):
+        if self.usage != None:
+            if hero._mana >= self._cost:
+                theGame().addMessage("\nYou use the spell " + self.description())
+                hero._mana -= self._cost
+                return self.usage(hero, self._power)
+            else:
+                theGame().addMessage(
+                    "\nYou don't have enough mana to use the spell "
+                    + self.description()
+                )
+                return False
+        else:
+            theGame().addMessage("\nThe spell " + self._name + " is not usable")
             return False
 
 
@@ -121,12 +188,12 @@ class Requip:
             c: str = getch()
             if c == "y":
                 theGame().addMessage(
-                    f"You've requiped {item.description()} instead of {self._requip[item._requipable].description()}"
+                    f"\nYou've requiped {item.description()} instead of {self._requip[item._requipable].description()}"
                 )
                 self._requip[item._requipable] = item
         else:
             self._requip[item._requipable] = item
-            theGame().addMessage(f"You've requiped {item.description()}")
+            theGame().addMessage(f"\nYou've requiped {item.description()}")
 
 
 class Creature(Element):
@@ -153,7 +220,7 @@ class Creature(Element):
         damageCalculate: int = other._strength - self._defense
         self._hp -= max(damageMin, damageCalculate)
         theGame().addMessage(
-            "The " + str(other._name) + " hits the " + str(self.description())
+            "\nThe " + str(other._name) + " hits the " + str(self.description())
         )
         return self._hp <= 0
 
@@ -195,14 +262,22 @@ class Hero(Creature):
         strength: int = 2,
         defense: int = 0,
         speed: int = 1,
+        mana: int = 5,
         requip: Requip = Requip(),
     ) -> None:
         Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+        self._mana = mana
         self._requipment = requip
         self._inventory = []
 
     def description(self) -> str:
-        return Creature.description(self) + str(self._inventory)
+        return (
+            Creature.description(self)
+            + "{"
+            + str(self._mana)
+            + "}"
+            + str(self._inventory)
+        )
 
     def fullDescrition(self) -> str:
         res: str = ""
@@ -214,6 +289,7 @@ class Hero(Creature):
         res += "> strength : " + str(dict["_strength"]) + "\n"
         res += "> defense : " + str(dict["_defense"]) + "\n"
         res += "> speed : " + str(dict["_speed"]) + "\n"
+        res += "> mana : " + str(dict["_mana"]) + "\n"
         res += "> REQUIPMENTS : "
         for piece, equipment in self._requipment._requip.items():
             if equipment != None:
@@ -254,10 +330,17 @@ class Hero(Creature):
         item.usage(self)
         self._requipment.add(item)
 
+    def cast(self) -> None:
+        l: List[Spell] = []
+        for i in range(3):  # A changer par rapport au niveau du héros
+            l += theGame().spells[i]
+        spell: Spell = theGame().select(l)
+        spell.use(self)
+
     def toss(self) -> None:
         item = theGame().select(self._inventory)
         self._inventory.remove(item)
-        theGame().addMessage(f"You've tossed <{item._name}>")
+        theGame().addMessage(f"\nYou've tossed <{item._name}>")
 
 
 class Room:
@@ -519,6 +602,7 @@ class Game:
     equipments = {
         0: [
             Equipment("potion", "!", usage=lambda creature: heal(creature)),
+            Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
             Equipment("gold", "o"),
         ],
         1: [
@@ -567,6 +651,41 @@ class Game:
         1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
         5: [Creature("Dragon", 20, strength=3)],
     }
+
+    spells = {
+        0: [
+            Spell(
+                "Heal",
+                cost=1,
+                power=3,
+                usage=lambda creature, power: heal(creature, power),
+            ),
+            Spell(
+                "Teleport",
+                cost=1,
+                power=None,
+                usage=lambda creature, power: teleport(creature, False),
+            ),
+        ],
+        1: [
+            Spell(
+                "Glacial Storm",
+                cost=2,
+                power=3,
+                usage=lambda creature, power: glacialStorm(creature, power),
+            )
+        ],
+        2: [
+            Spell(
+                "Final Spark",
+                cost=3,
+                power=5,
+                usage=lambda creature, power: hyperBeam(creature, power),
+            )
+        ],
+        5: [],
+    }
+
     _actions = {
         # Déplacements diagonaux
         "a": lambda hero: theGame()._floor.move(hero, Coord(-1, -1)),
@@ -580,10 +699,12 @@ class Game:
         "d": lambda hero: theGame()._floor.move(hero, Coord(1, 0)),
         # Lancer un objet
         "j": lambda hero: hero.throw(),
+        # Lancer un sort
+        "m": lambda hero: hero.cast(),
         # Pas d'action
         "x": lambda hero: None,
         # Description complète
-        "i": lambda hero: theGame().addMessage(hero.fullDescrition()),
+        "i": lambda hero: theGame().addMessage("\n" + hero.fullDescrition()),
         # Suicide
         "k": lambda hero: hero.__setattr__("_hp", 0),
         # Utiliser un objet
@@ -675,7 +796,7 @@ class Stairs(Element):
         Element.__init__(self, name, abbrv)
 
     def meet(self, hero: Hero) -> bool:
-        theGame().addMessage(f"{hero._name} goes down")
+        theGame().addMessage(f"\n{hero._name} goes down")
         theGame().buildFloor()
         return True
 
