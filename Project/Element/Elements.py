@@ -101,30 +101,32 @@ class Requip:
         shoes: Equipment = None,
         weapon: Equipment = None,
     ):
-        self._helmet = helmet
-        self._armor = armor
-        self._shoes = shoes
-        self._weapon = weapon
-
-    def getAll(self) -> Dict[str, Equipment]:
-        return {
-            "helmet": self._helmet,
-            "armor": self._armor,
-            "shoes": self._shoes,
-            "weapon": self._weapon,
+        self._requip = {
+            "helmet": helmet,
+            "armor": armor,
+            "shoes": shoes,
+            "weapon": weapon,
         }
 
     def add(self, item: Equipment) -> None:
-        part: str = item._requipable
-        if part == "helmet":
-            self._helmet = item
-        elif part == "armor":
-            self._armor = item
-        elif part == "shoes":
-            self._shoes = item
-        elif part == "weapon":
-            self._weapon = item
-        theGame().addMessage(f"You've requiped {item.description()}")
+        if self._requip[item._requipable] != None:
+            print("You've already requipped <" + item._requipable + ">")
+            print(
+                "Do you want to replace "
+                + self._requip[item._requipable].description()
+                + " for "
+                + item.description()
+                + " ? y/n"
+            )
+            c: str = getch()
+            if c == "y":
+                theGame().addMessage(
+                    f"You've requiped {item.description()} instead of {self._requip[item._requipable].description()}"
+                )
+                self._requip[item._requipable] = item
+        else:
+            self._requip[item._requipable] = item
+            theGame().addMessage(f"You've requiped {item.description()}")
 
 
 class Creature(Element):
@@ -196,7 +198,7 @@ class Hero(Creature):
         requip: Requip = Requip(),
     ) -> None:
         Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
-        self._requip = requip
+        self._requipment = requip
         self._inventory = []
 
     def description(self) -> str:
@@ -213,7 +215,7 @@ class Hero(Creature):
         res += "> defense : " + str(dict["_defense"]) + "\n"
         res += "> speed : " + str(dict["_speed"]) + "\n"
         res += "> REQUIPMENTS : "
-        for piece, equipment in self._requip.getAll().items():
+        for piece, equipment in self._requipment._requip.items():
             if equipment != None:
                 res += f"{piece} -> {equipment.description()}, "
         res += "\n> INVENTORY : " + str([item._name for item in self._inventory])
@@ -250,7 +252,7 @@ class Hero(Creature):
 
     def requipment(self, item: Equipment) -> None:
         item.usage(self)
-        self._requip.add(item)
+        self._requipment.add(item)
 
     def toss(self) -> None:
         item = theGame().select(self._inventory)
