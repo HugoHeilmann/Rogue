@@ -319,7 +319,9 @@ class Hero(Creature):
             and theGame()._floor.get(location) == Map.ground
         ):
             location += direction
-        if isinstance(theGame()._floor.get(location), Creature):
+        if location in theGame()._floor and isinstance(
+            theGame()._floor.get(location), Creature
+        ):
             dead: bool = theGame()._floor.get(location).meet(item)
             if dead:
                 theGame()._floor.rm(location)
@@ -339,8 +341,9 @@ class Hero(Creature):
 
     def toss(self) -> None:
         item = theGame().select(self._inventory)
-        self._inventory.remove(item)
-        theGame().addMessage(f"\nYou've tossed <{item._name}>")
+        if item in self._inventory:
+            self._inventory.remove(item)
+            theGame().addMessage(f"\nYou've tossed <{item._name}>")
 
 
 class Room:
@@ -453,6 +456,22 @@ class Map:
             for j in i:
                 s += str(j)
             s += "\n"
+        return s
+
+    def reduced(self) -> str:
+        s = ""
+        heroCoord: Coord = self.pos(self._hero)
+        x: int = 0
+        for i in self._mat:
+            y: int = 0
+            for j in i:
+                if Coord.distance(heroCoord, Coord(y, x)) < 5:
+                    s += str(j)
+                else:
+                    s += self.empty
+                y += 1
+            s += "\n"
+            x += 1
         return s
 
     def put(self, c: Coord, o: Element) -> None:
@@ -778,7 +797,7 @@ class Game:
             for _ in range(self._floor._hero._speed):
                 os.system("cls")
                 print()
-                print(self._floor)
+                print(self._floor.reduced())
                 print(self._hero.description())
                 print(self.readMessages())
                 c = getch()
