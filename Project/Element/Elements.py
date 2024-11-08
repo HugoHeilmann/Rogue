@@ -730,6 +730,8 @@ class Game:
         "u": lambda hero: hero.use(theGame().select(hero._inventory)),
         # Jeter un objet
         "t": lambda hero: hero.toss(),
+        # Montrer le lexique des actions
+        "l": lambda hero: theGame().showActions(),
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
@@ -737,6 +739,25 @@ class Game:
         self._level = level
         self._floor = None
         self._message: List[str] = []
+
+    def showActions(self) -> None:
+        res: str = ""
+        res += "\n<-- ACTIONS -->\n"
+        res += "\n> MOVES : \n"
+        res += "Lateral : z(↑), q(←), s(↓), d(→)\n"
+        res += "Diagonal : a(↖), e(↗), w(↙), c(↘)\n"
+        res += "\n> OBJECTS : \n"
+        res += "Use : u, then choose object\n"
+        res += "Toss : t, then choose object\n"
+        res += "\n> ATTACKS : \n"
+        res += "Throw an object against someone : j, then choose object, then choose direction\n"
+        res += "Cast a spell : m, then choose a spell\n"
+        res += "\n> GESTION : \n"
+        res += "Full description of yourself : i\n"
+        res += "Kill yourself : k\n"
+        res += "Show this lexical : l\n"
+        res += "Do nothing : every other letter\n"
+        theGame().addMessage(res)
 
     def buildFloor(self) -> Map:
         self._floor = Map(hero=self._hero)
@@ -803,9 +824,9 @@ class Game:
                 c = getch()
                 if c in Game._actions:
                     Game._actions[c](self._hero)
-                    if c == "k":
+                    if c == "k" or c == "l":
                         break
-            self._floor.moveAllMonsters()
+                self._floor.moveAllMonsters()
         print(self.readMessages())
         print("--- Game Over ---")
 
