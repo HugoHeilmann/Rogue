@@ -90,6 +90,16 @@ def applyBurn(creature: "Creature") -> None:
     theGame().addMessage("\n" + creature._name + " suffers from it's burn\n")
 
 
+def paralysis(creature: "Creature") -> bool:
+    creature.status.append(Paralysis(time_effect=5))
+    theGame().addMessage("\n" + creature._name + " has been paralysed\n")
+    return True
+
+
+def applyParalysis(creature: "Creature") -> None:
+    theGame().addMessage("\n" + creature._name + " is paralysed\n")
+
+
 def setStrength(creature: "Creature", strength: int) -> bool:
     creature._strength = strength
     return True
@@ -182,10 +192,19 @@ class Status:
     def turn_effect(self, creature: "Creature") -> bool:
         raise NotImplementedError("Abstract method")
 
+    @abc.abstractmethod
+    def end(self, creature: "Creature") -> None:
+        raise NotImplementedError("Abstract method")
+
 
 class Burn(Status):
-    def __init__(self):
-        Status.__init__(self, "burn", usage=lambda creature: applyBurn(creature))
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "burn",
+            time_effect=time_effect,
+            usage=lambda creature: applyBurn(creature),
+        )
 
     def turn_effect(self, creature: "Creature") -> bool:
         self.usage(creature)
@@ -194,6 +213,25 @@ class Burn(Status):
 
     def end(self, creature: "Creature") -> None:
         theGame().addMessage(creature._name + " isn't burn anymore\n")
+        creature.status.remove(self)
+
+
+class Paralysis(Status):
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "paralysis",
+            time_effect=time_effect,
+            usage=lambda creature: applyParalysis(creature),
+        )
+
+    def turn_effect(self, creature: "Creature") -> bool:
+        self.usage(creature)
+        self._remaining_time -= 1
+        return self._remaining_time == 0
+
+    def end(self, creature: "Creature") -> None:
+        theGame().addMessage(creature._name + " isn't paralysed anymore\n")
         creature.status.remove(self)
 
 
@@ -536,6 +574,11 @@ class Map:
         self._mat[c.y][c.x] = Map.ground
 
     def move(self, e: Element, way: Coord) -> None:
+        if isinstance(e, Creature):
+            for status in e.status:
+                if isinstance(status, Paralysis):
+                    theGame().addMessage("\n" + e._name + " is paralyzed !\n")
+                    return
         orig = self.pos(e)
         dest = orig + way
         if dest in self:
@@ -658,7 +701,8 @@ class Map:
 class Game:
     equipments = {
         0: [
-            Equipment("potion", "!", usage=lambda creature: burn(creature)),
+            # Equipment("potion", "!", usage=lambda creature: burn(creature)),
+            Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
             # Equipment("potion", "!", usage=lambda creature: heal(creature)),
             # Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
             Equipment("gold", "o"),
