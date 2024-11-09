@@ -79,6 +79,17 @@ def teleport(creature: "Creature", unique):
     return unique
 
 
+def burn(creature: "Creature") -> bool:
+    creature.status.append(Burn())
+    theGame().addMessage("\n" + creature._name + " has been burn\n")
+    return True
+
+
+def applyBurn(creature: "Creature") -> None:
+    creature._hp -= 1
+    theGame().addMessage("\n" + creature._name + " suffers from it's burn\n")
+
+
 def setStrength(creature: "Creature", strength: int) -> bool:
     creature._strength = strength
     return True
@@ -160,6 +171,32 @@ class Spell:
             return False
 
 
+class Status:
+    def __init__(self, name: str, time_effect: int = 3, usage=None):
+        self._name = name
+        self._time_effect = time_effect
+        self.usage = usage
+        self._remaining_time = time_effect
+
+    @abc.abstractmethod
+    def turn_effect(self, creature: "Creature") -> bool:
+        raise NotImplementedError("Abstract method")
+
+
+class Burn(Status):
+    def __init__(self):
+        Status.__init__(self, "burn", usage=lambda creature: applyBurn(creature))
+
+    def turn_effect(self, creature: "Creature") -> bool:
+        self.usage(creature)
+        self._remaining_time -= 1
+        return self._remaining_time == 0
+
+    def end(self, creature: "Creature") -> None:
+        theGame().addMessage(creature._name + " isn't burn anymore\n")
+        creature.status.remove(self)
+
+
 class Requip:
     def __init__(
         self,
@@ -211,6 +248,7 @@ class Creature(Element):
         self._strength = strength
         self._defense = defense
         self._speed = speed
+        self.status: List[Status] = []
 
     def description(self) -> str:
         return Element.description(self) + "(" + str(self._hp) + ")"
@@ -620,8 +658,9 @@ class Map:
 class Game:
     equipments = {
         0: [
-            Equipment("potion", "!", usage=lambda creature: heal(creature)),
-            Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
+            Equipment("potion", "!", usage=lambda creature: burn(creature)),
+            # Equipment("potion", "!", usage=lambda creature: heal(creature)),
+            # Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
             Equipment("gold", "o"),
         ],
         1: [
@@ -631,7 +670,7 @@ class Game:
                 requipable="weapon",
             ),
             Equipment("light bow", "b", thrower=True),
-            Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
+            # Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
         ],
         2: [
             Equipment(
@@ -816,6 +855,15 @@ class Game:
             return Map.dir[key]
         return None
 
+    def applyStatus(self) -> None:
+        for elem in theGame()._floor._elem:
+            if isinstance(elem, Creature):
+                for status in elem.status:
+                    if type(status) != Status:
+                        status_end: bool = status.turn_effect(elem)
+                        if status_end:
+                            status.end(elem)
+
     def play(self) -> None:
         import os
 
@@ -849,6 +897,7 @@ class Game:
                     if c == "k" or c == "l":
                         break
                 self._floor.moveAllMonsters()
+                self.applyStatus()
         print(self.readMessages())
         print("--- Game Over ---")
 
