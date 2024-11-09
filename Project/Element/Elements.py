@@ -766,6 +766,13 @@ class Game:
         theGame()._floor.put(stairs, Stairs())
         return self._floor
 
+    def buildEndFloor(self) -> Map:
+        self._floor = Map(hero=self._hero)
+        theGame()._floor = self._floor
+        masterSword = Room.center(theGame()._floor._rooms[-1])
+        theGame()._floor.put(masterSword, MasterSword())
+        return self._floor
+
     def addMessage(self, msg: str) -> None:
         self._message.append(msg)
 
@@ -813,10 +820,25 @@ class Game:
         import os
 
         self.buildFloor()
-        print("--- Welcome Hero! ---")
+        print(
+            "\n----------------------------- Welcome Hero! -----------------------------"
+        )
+        print(
+            "\nYour objective is to find the legendary Master Sword hidden in the dungeon"
+        )
+        print("However, the monsters are here to keep you from touching it")
+        print("Use the character l to see your potential of actions")
+        print("Don't worry, monsters won't approch you while you read the lexical ;)")
+        print("Use the character c to begin your adventure !")
+        continu: bool = False
+        while not continu:
+            c = getch()
+            if c == "c":
+                continu = True
         while self._hero._hp > 0:
             for _ in range(self._floor._hero._speed):
                 os.system("cls")
+                print("Level -" + str(self._level))
                 print()
                 print(self._floor.reduced())
                 print(self._hero.description())
@@ -837,8 +859,24 @@ class Stairs(Element):
 
     def meet(self, hero: Hero) -> bool:
         theGame().addMessage(f"\n{hero._name} goes down")
-        theGame().buildFloor()
+        theGame()._level += 1
+        if theGame()._level == 5:
+            theGame().buildEndFloor()
+        else:
+            theGame().buildFloor()
         return True
+
+
+class MasterSword(Element):
+    def __init__(self, name="Master Sword", abbrv="⚔") -> None:
+        Element.__init__(self, name, abbrv)
+
+    def meet(self, hero: Hero) -> None:
+        import sys
+
+        print("Congratulation Hero, you've retrieved the legendary Master Sword !")
+        print("\n--- You won ! ---")
+        sys.exit()
 
 
 def theGame(game=Game()):
