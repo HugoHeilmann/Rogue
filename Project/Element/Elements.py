@@ -100,6 +100,16 @@ def applyParalysis(creature: "Creature") -> None:
     theGame().addMessage("\n" + creature._name + " is paralysed\n")
 
 
+def freeze(creature: "Creature") -> bool:
+    creature.status.append(Freeze())
+    theGame().addMessage("\n" + creature._name + " has been frozen\n")
+    return True
+
+
+def applyFreeze(creature: "Creature") -> bool:
+    theGame().addMessage("\n" + creature._name + " is frozen\n")
+
+
 def setStrength(creature: "Creature", strength: int) -> bool:
     creature._strength = strength
     return True
@@ -182,7 +192,7 @@ class Spell:
 
 
 class Status:
-    def __init__(self, name: str, time_effect: int = 3, usage=None):
+    def __init__(self, name: str, time_effect: int, usage=None):
         self._name = name
         self._time_effect = time_effect
         self.usage = usage
@@ -232,6 +242,25 @@ class Paralysis(Status):
 
     def end(self, creature: "Creature") -> None:
         theGame().addMessage(creature._name + " isn't paralysed anymore\n")
+        creature.status.remove(self)
+
+
+class Freeze(Status):
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "freeze",
+            time_effect=time_effect,
+            usage=lambda creature: applyFreeze(creature),
+        )
+
+    def turn_effect(self, creature: "Creature") -> bool:
+        self.usage(creature)
+        self._remaining_time -= 1
+        return self._remaining_time == 0
+
+    def end(self, creature: "Creature") -> None:
+        theGame().addMessage(creature._name + " isn't frozen anymore\n")
         creature.status.remove(self)
 
 
@@ -420,6 +449,12 @@ class Hero(Creature):
         if item in self._inventory:
             self._inventory.remove(item)
             theGame().addMessage(f"\nYou've tossed <{item._name}>")
+
+    def hasStatus(self, status_name: str) -> bool:
+        for status in self.status:
+            if status._name == status_name:
+                return True
+        return False
 
 
 class Room:
@@ -702,7 +737,8 @@ class Game:
     equipments = {
         0: [
             # Equipment("potion", "!", usage=lambda creature: burn(creature)),
-            Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
+            # Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
+            Equipment("potion", "!", usage=lambda creature: freeze(creature)),
             # Equipment("potion", "!", usage=lambda creature: heal(creature)),
             # Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
             Equipment("gold", "o"),
@@ -937,7 +973,10 @@ class Game:
                 print(self.readMessages())
                 c = getch()
                 if c in Game._actions:
-                    Game._actions[c](self._hero)
+                    if self._floor._hero.hasStatus("freeze") and c != "l":
+                        applyFreeze(self._floor._hero)
+                    else:
+                        Game._actions[c](self._hero)
                     if c == "k" or c == "l":
                         break
                 self._floor.moveAllMonsters()
