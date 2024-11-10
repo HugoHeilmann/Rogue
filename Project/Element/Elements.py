@@ -24,6 +24,7 @@ class Element(metaclass=abc.ABCMeta):
         raise NotImplementedError("Abstract method")
 
 
+# Magic
 def heal(creature: "Creature", power: int = 3) -> bool:
     creature._hp += power
     return True
@@ -41,6 +42,7 @@ def hyperBeam(hero: "Hero", power: int) -> bool:
         c = theGame()._floor.get(location)
         if isinstance(c, Creature):
             c._hp -= power
+            paralysis(c)
             theGame().addMessage("\nThe <final spark> hits the " + c.description())
             if c._hp <= 0:
                 theGame()._floor.rm(location)
@@ -61,6 +63,7 @@ def glacialStorm(hero: "Hero", power: int) -> bool:
                 and not isinstance(c, Hero)
             ):
                 c._hp -= power
+                freeze(c)
                 theGame().addMessage(
                     "\nThe <glacial storm> hits the " + c.description()
                 )
@@ -79,8 +82,18 @@ def teleport(creature: "Creature", unique):
     return unique
 
 
-def burn(creature: "Creature") -> bool:
-    creature.status.append(Burn())
+# Status
+def applyStatusEffect(creature: "Creature", status: "Status", time_effect: int) -> None:
+    if isinstance(status, Burn):
+        burn(creature, time_effect)
+    elif isinstance(status, Paralysis):
+        paralysis(creature, time_effect)
+    elif isinstance(status, Freeze):
+        freeze(creature, time_effect)
+
+
+def burn(creature: "Creature", time_effect: int = 3) -> bool:
+    creature.status.append(Burn(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been burn\n")
     return True
 
@@ -90,8 +103,8 @@ def applyBurn(creature: "Creature") -> None:
     theGame().addMessage("\n" + creature._name + " suffers from it's burn\n")
 
 
-def paralysis(creature: "Creature") -> bool:
-    creature.status.append(Paralysis(time_effect=5))
+def paralysis(creature: "Creature", time_effect: int = 3) -> bool:
+    creature.status.append(Paralysis(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been paralysed\n")
     return True
 
@@ -100,8 +113,8 @@ def applyParalysis(creature: "Creature") -> None:
     theGame().addMessage("\n" + creature._name + " is paralysed\n")
 
 
-def freeze(creature: "Creature") -> bool:
-    creature.status.append(Freeze())
+def freeze(creature: "Creature", time_effect: int = 3) -> bool:
+    creature.status.append(Freeze(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been frozen\n")
     return True
 
@@ -219,6 +232,8 @@ class Burn(Status):
     def turn_effect(self, creature: "Creature") -> bool:
         self.usage(creature)
         self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
         return self._remaining_time == 0
 
     def end(self, creature: "Creature") -> None:
@@ -238,6 +253,8 @@ class Paralysis(Status):
     def turn_effect(self, creature: "Creature") -> bool:
         self.usage(creature)
         self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
         return self._remaining_time == 0
 
     def end(self, creature: "Creature") -> None:
@@ -255,8 +272,9 @@ class Freeze(Status):
         )
 
     def turn_effect(self, creature: "Creature") -> bool:
-        self.usage(creature)
         self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
         return self._remaining_time == 0
 
     def end(self, creature: "Creature") -> None:
@@ -309,12 +327,18 @@ class Creature(Element):
         strength: int = 1,
         defense: int = 0,
         speed: int = 1,
+        status_applyable: Status = None,
+        probability: int = 10,
+        time_effect: int = 3,
     ) -> None:
         Element.__init__(self, name, abbrv)
         self._hp = hp
         self._strength = strength
         self._defense = defense
         self._speed = speed
+        self._status_applyable = status_applyable
+        self._probability = probability
+        self._time_effect = time_effect
         self.status: List[Status] = []
 
     def description(self) -> str:
@@ -323,11 +347,20 @@ class Creature(Element):
     def meet(self, other: "Creature") -> bool:
         damageMin: int = 1
         damageCalculate: int = other._strength - self._defense
+        applyStatus: bool = random.randint(1, other._probability) == other._probability
         self._hp -= max(damageMin, damageCalculate)
         theGame().addMessage(
             "\nThe " + str(other._name) + " hits the " + str(self.description())
         )
+        if applyStatus:
+            applyStatusEffect(self, other._status_applyable, other._time_effect)
         return self._hp <= 0
+
+    def hasStatus(self, status_name: str) -> bool:
+        for status in self.status:
+            if status._name == status_name:
+                return True
+        return False
 
 
 class Archery(Creature):
@@ -720,6 +753,9 @@ class Map:
         target: Coord = self.pos(self._hero)
         for elem in self._elem:
             if isinstance(elem, Creature) and type(elem) != Hero:
+                if elem.hasStatus("freeze"):
+                    applyFreeze(elem)
+                    break
                 for _ in range(elem._speed):
                     badGuy: Coord = self.pos(elem)
                     if Coord.distance(badGuy, target) <= 4 and type(elem) == Archery:
@@ -736,11 +772,8 @@ class Map:
 class Game:
     equipments = {
         0: [
-            # Equipment("potion", "!", usage=lambda creature: burn(creature)),
-            # Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
-            Equipment("potion", "!", usage=lambda creature: freeze(creature)),
-            # Equipment("potion", "!", usage=lambda creature: heal(creature)),
-            # Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
+            Equipment("potion", "!", usage=lambda creature: heal(creature)),
+            Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
             Equipment("gold", "o"),
         ],
         1: [
@@ -750,7 +783,9 @@ class Game:
                 requipable="weapon",
             ),
             Equipment("light bow", "b", thrower=True),
-            # Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
+            Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
+            Equipment("potion", "!", usage=lambda creature: burn(creature)),
+            Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
         ],
         2: [
             Equipment(
@@ -770,6 +805,7 @@ class Game:
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="shoes",
             ),
+            Equipment("potion", "!", usage=lambda creature: freeze(creature)),
         ],
         3: [
             Equipment(
@@ -785,9 +821,16 @@ class Game:
     }
 
     monsters = {
-        0: [Creature("Goblin", 4), Creature("Bat", 2, "W"), Archery("Archer", 6)],
+        0: [
+            Creature("Goblin", 4, status_applyable=Burn()),
+            Creature("Bat", 2, "W"),
+            Archery("Archer", 6),
+        ],
         1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
-        5: [Creature("Dragon", 20, strength=3)],
+        2: [
+            Creature("Ice elementary", 3, "I", strength=1, status_applyable=Freeze()),
+        ],
+        5: [Creature("Dragon", 20, strength=3, status_applyable=Burn(), probability=5)],
     }
 
     spells = {
@@ -940,9 +983,7 @@ class Game:
             if isinstance(elem, Creature):
                 for status in elem.status:
                     if type(status) != Status:
-                        status_end: bool = status.turn_effect(elem)
-                        if status_end:
-                            status.end(elem)
+                        status.turn_effect(elem)
 
     def play(self) -> None:
         import os
@@ -968,8 +1009,11 @@ class Game:
                 os.system("cls")
                 print("Level -" + str(self._level))
                 print()
+                self.applyStatus()
                 print(self._floor.reduced())
                 print(self._hero.description())
+                if self._hero._hp <= 0:
+                    break
                 print(self.readMessages())
                 c = getch()
                 if c in Game._actions:
@@ -979,8 +1023,9 @@ class Game:
                         Game._actions[c](self._hero)
                     if c == "k" or c == "l":
                         break
-                self._floor.moveAllMonsters()
-                self.applyStatus()
+            if self._hero._hp <= 0:
+                break
+            self._floor.moveAllMonsters()
         print(self.readMessages())
         print("--- Game Over ---")
 
