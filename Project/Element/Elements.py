@@ -233,6 +233,7 @@ class Equipment(Element):
         self,
         name: str,
         abbrv: str = "",
+        fullDescription: str = "Useless for now",
         usage=None,
         strength: int = 1,
         usefullPower: int = 1,
@@ -240,6 +241,7 @@ class Equipment(Element):
         requipable: str = "",
     ) -> None:
         Element.__init__(self, name, abbrv)
+        self._fullDescription = fullDescription
         self.usage = usage
         self._strength = strength
         self._usefullPower = usefullPower
@@ -273,8 +275,16 @@ class Equipment(Element):
 
 
 class Spell:
-    def __init__(self, name: str, cost: int = 1, power: int = 3, usage=None):
+    def __init__(
+        self,
+        name: str,
+        fullDescription: str,
+        cost: int = 1,
+        power: int = 3,
+        usage=None,
+    ):
         self._name = name
+        self._fullDescription = fullDescription
         self._cost = cost
         self._power = power
         self.usage = usage
@@ -517,7 +527,7 @@ class Hero(Creature):
     def __init__(
         self,
         name: str = "Hero",
-        hp: int = 10000,
+        hp: int = 10,
         abbrv: str = "@",
         strength: int = 2,
         defense: int = 0,
@@ -551,7 +561,10 @@ class Hero(Creature):
         return res
 
     def fullDescrition(self) -> str:
-        res: str = getColor("white")
+        res: str = (
+            getColor("white")
+            + "##### YOU DON'T LOSE ANY TURN WITH THIS ACTION #####\n\n"
+        )
         dict = self.__dict__
         print("dict : ", dict)
         res += "> name : " + dict["_name"] + "\n"
@@ -573,6 +586,16 @@ class Hero(Creature):
                 res += f"{piece} -> {equipment.description()}, "
         res += "\n> INVENTORY : " + str([item._name for item in self._inventory])
         return res
+
+    def objectsDescription(self) -> None:
+        if len(self._inventory) == 0:
+            theGame().addMessage("\nYour inventory is empty !")
+            return
+        msg: str = "\n##### YOU DON'T LOSE ANY TURN WITH THIS ACTION #####\n\n"
+        msg += "<<< Description of your inventory >>>\n\n"
+        for elem in self._inventory:
+            msg += ">" + elem._name + " : " + elem._fullDescription + "\n"
+        theGame().addMessage(msg)
 
     def take(self, elem: Equipment) -> None:
         self._inventory.append(elem)
@@ -913,48 +936,86 @@ class Map:
 class Game:
     equipments = {
         0: [
-            Equipment("potion", "!", usage=lambda creature: heal(creature)),
-            Equipment("potion", "!", usage=lambda hero: manaHeal(hero)),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: heal(creature),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda hero: manaHeal(hero),
+            ),
             Equipment("gold", "o"),
         ],
         1: [
             Equipment(
                 "sword",
+                fullDescription="A piece of requipment : <weapon>, it increases your strength",
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="weapon",
             ),
             Equipment("light bow", "b", thrower=True),
-            Equipment("potion", "!", usage=lambda creature: teleport(creature, True)),
-            Equipment("potion", "!", usage=lambda creature: burn(creature)),
-            Equipment("potion", "!", usage=lambda creature: paralysis(creature)),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: teleport(creature, True),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: burn(creature),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: paralysis(creature),
+            ),
         ],
         2: [
             Equipment(
                 "chainmail",
+                fullDescription="A piece of requipment : <armor>, it increases your defense",
                 usage=lambda creature: setDefense(creature, creature._defense + 1),
                 requipable="armor",
             ),
             Equipment(
                 "iron helmet",
                 "h",
+                "A piece of requipment : <helmet>, it increases your defense",
                 usage=lambda creature: setDefense(creature, creature._defense + 1),
                 requipable="helmet",
             ),
             Equipment(
                 "spike shoes",
                 "k",
+                "A piece of requipment : <shoes>, it increases your strength",
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="shoes",
             ),
-            Equipment("potion", "!", usage=lambda creature: freeze(creature)),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: freeze(creature),
+            ),
         ],
         3: [
             Equipment(
-                "portoloin", "w", usage=lambda creature: teleport(creature, False)
+                "portoloin",
+                "w",
+                "A pocket teleporter with infinite use",
+                usage=lambda creature: teleport(creature, False),
             ),
             Equipment(
                 "nimbus 2000",
                 "→",
+                "A piece of requipment : <shoes>, it increases your speed",
                 usage=lambda creature: setSpeed(creature, creature._speed + 1),
                 requipable="shoes",
             ),
@@ -978,12 +1039,14 @@ class Game:
         0: [
             Spell(
                 "Heal",
+                "Heal yourself of 3 hp",
                 cost=1,
                 power=3,
                 usage=lambda creature, power: heal(creature, power),
             ),
             Spell(
                 "Teleport",
+                "Teleport yourself to an unknown position",
                 cost=1,
                 power=None,
                 usage=lambda creature, power: teleport(creature, False),
@@ -992,6 +1055,7 @@ class Game:
         1: [
             Spell(
                 "Glacial Storm",
+                "Attack all the enemies around you. May freeze some of them",
                 cost=2,
                 power=3,
                 usage=lambda creature, power: glacialStorm(creature, power),
@@ -1000,6 +1064,7 @@ class Game:
         2: [
             Spell(
                 "Final Spark",
+                "A powerful beam which touch all livings in a direction. May paralyse some of them",
                 cost=3,
                 power=5,
                 usage=lambda creature, power: hyperBeam(creature, power),
@@ -1035,8 +1100,10 @@ class Game:
         "t": lambda hero: hero.toss(),
         # Montrer le lexique des actions
         "l": lambda hero: theGame().showActions(),
-        "o": lambda hero: applyStatusEffect(hero, Burn(), 3),
-        "p": lambda hero: applyStatusEffect(hero, Freeze(), 3),
+        # Montrer le lexique des objets
+        "o": lambda hero: hero.objectsDescription(),
+        # Montrer le lexique de la magie
+        "p": lambda hero: theGame().spellsDescription(),
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
@@ -1046,7 +1113,7 @@ class Game:
         self._message: List[str] = []
 
     def showActions(self) -> None:
-        res: str = ""
+        res: str = "\n##### YOU DON'T LOSE ANY TURN WITH THIS ACTION #####\n"
         res += "\n<-- ACTIONS -->\n"
         res += "\n> MOVES : \n"
         res += "Lateral : z(↑), q(←), s(↓), d(→)\n"
@@ -1057,12 +1124,22 @@ class Game:
         res += "\n> ATTACKS : \n"
         res += "Throw an object against someone : j, then choose object, then choose direction\n"
         res += "Cast a spell : m, then choose a spell\n"
-        res += "\n> GESTION : \n"
-        res += "Full description of yourself : i\n"
-        res += "Kill yourself : k\n"
+        res += "\n> DESCRIPTIONS : \n"
+        res += "Show the full description of yourself : i\n"
         res += "Show this lexical : l\n"
-        res += "Do nothing : every other letter\n"
+        res += "Show the description of the objects you possess : o\n"
+        res += "Show the description of the magic you can use : p\n"
+        res += "\n> END THE GAME : \n"
+        res += "Kill yourself : k\n"
         theGame().addMessage(res)
+
+    def spellsDescription(self) -> None:
+        msg: str = "\n##### YOU DON'T LOSE ANY TURN WITH THIS ACTION #####\n\n"
+        msg += "<<< Description of the spells >>>\n\n"
+        for spellIndex in self.spells:
+            for spell in self.spells[spellIndex]:
+                msg += ">" + spell._name + " : " + spell._fullDescription + "\n"
+        theGame().addMessage(msg)
 
     def buildFloor(self) -> Map:
         self._floor = Map(hero=self._hero)
@@ -1156,7 +1233,8 @@ class Game:
             if c == "c":
                 continu = True
         while self._hero._hp > 0:
-            for _ in range(self._floor._hero._speed):
+            i: int = 0
+            while i < self._floor._hero._speed:
                 os.system("cls")
                 print("Level -" + str(self._level))
                 print()
@@ -1172,8 +1250,16 @@ class Game:
                         applyFreeze(self._floor._hero)
                     else:
                         Game._actions[c](self._hero)
-                    if c == "k" or c == "l":
-                        break
+                    if (
+                        # Actions qui ne font pas perdre de tour
+                        c == "k"
+                        or c == "l"
+                        or c == "o"
+                        or c == "p"
+                        or c == "i"
+                    ):
+                        i -= 1
+                    i += 1
             if self._hero._hp <= 0:
                 break
             self._floor.moveAllMonsters()
