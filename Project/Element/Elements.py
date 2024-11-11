@@ -347,7 +347,12 @@ class Creature(Element):
     def meet(self, other: "Creature") -> bool:
         damageMin: int = 1
         damageCalculate: int = other._strength - self._defense
-        applyStatus: bool = random.randint(1, other._probability) == other._probability
+        if isinstance(other, Creature):
+            applyStatus: bool = (
+                random.randint(1, other._probability) == other._probability
+            )
+        else:
+            applyStatus: bool = False
         self._hp -= max(damageMin, damageCalculate)
         theGame().addMessage(
             "\nThe " + str(other._name) + " hits the " + str(self.description())
@@ -441,15 +446,17 @@ class Hero(Creature):
             raise TypeError("Not in equipment")
 
     def use(self, item: Equipment):
+        if item not in self._inventory:
+            return None
         if not isinstance(item, Equipment):
             raise TypeError("Not an equipment")
-        if item not in self._inventory:
-            raise ValueError("Not in inventory")
         if Equipment.use(item, self):
             self._inventory.remove(item)
 
     def throw(self) -> None:
         item: Equipment = theGame().select(self._inventory)
+        if not type(item) == Equipment:
+            return None
         direction: Coord = theGame().selectCoord(Map.dir_arrow)
         location = theGame()._floor.pos(self) + direction
         while (
@@ -822,7 +829,7 @@ class Game:
 
     monsters = {
         0: [
-            Creature("Goblin", 4, status_applyable=Burn()),
+            Creature("Goblin", 4),
             Creature("Bat", 2, "W"),
             Archery("Archer", 6),
         ],
@@ -960,23 +967,30 @@ class Game:
     def randMonster(self) -> Creature:
         return self.randElement(Game.monsters)
 
-    def select(self, l: List) -> Equipment:
-        print("Choose item> " + str([str(l.index(e)) + ": " + e._name for e in l]))
+    def select(self, l: List, repeat: bool = False) -> Equipment:
+        if len(l) == 0:
+            theGame().addMessage("\nYour inventory is empty !")
+            return None
+        if not repeat:
+            print("Choose item> " + str([str(l.index(e)) + ": " + e._name for e in l]))
         c: str = getch()
-        if c.isdigit() and int(c) in range(len(l)):
+        if not is_digit(c) or int(c) not in range(len(l)):
+            return self.select(l, True)
+        else:
             return l[int(c)]
-        return None
 
-    def selectCoord(self, d: Dict) -> Coord:
-        print(
-            "Choose direction> "
-            + str([str(i) + ": " + str(d[key]) for i, key in enumerate(d)])
-        )
+    def selectCoord(self, d: Dict, repeat: bool = False) -> Coord:
+        if not repeat:
+            print(
+                "Choose direction> "
+                + str([str(i) + ": " + str(d[key]) for i, key in enumerate(d)])
+            )
         c: str = getch()
-        if c.isdigit() and int(c) in range(len(d)):
+        if not is_digit(c) or int(c) not in range(len(d)):
+            return self.selectCoord(d, True)
+        else:
             key = list(d.keys())[int(c)]
             return Map.dir[key]
-        return None
 
     def applyStatus(self) -> None:
         for elem in theGame()._floor._elem:
@@ -1064,4 +1078,19 @@ import msvcrt
 
 
 def getch():
-    return msvcrt.getch().decode("utf-8")
+    ch = msvcrt.getch()
+    while ch == b"\xe0" or ch == b"\x00":  # touche spéciale (flèches, etc...)
+        ch = msvcrt.getch()
+
+    try:
+        return ch.decode("utf-8")
+    except UnicodeDecodeError:
+        return ch.decode("latin-1")
+
+
+def is_digit(ch):
+    if ch.isdigit():
+        return True
+    numpad_digits = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+
+    return ch in numpad_digits
