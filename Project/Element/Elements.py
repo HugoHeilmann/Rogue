@@ -86,14 +86,89 @@ def teleport(creature: "Creature", unique):
 # Status
 def applyStatusEffect(creature: "Creature", status: "Status", time_effect: int) -> None:
     if isinstance(status, Burn):
-        burn(creature, time_effect)
+        if creature.hasStatus("freeze"):
+            freezePower: int = random.randint(1, 20)
+            burnPower: int = random.randint(1, 20)
+            diff = freezePower - burnPower
+            if abs(diff) < 5:
+                creature.removeStatus("freeze")
+                theGame().addMessage(
+                    "The attempt to burn "
+                    + creature.description()
+                    + " unfroze "
+                    + creature.description()
+                    + "\n"
+                )
+            else:
+                if diff < 0:
+                    creature.removeStatus("freeze")
+                    burn(creature, time_effect)
+                    theGame().addMessage(
+                        "The attempt to burn "
+                        + creature.description()
+                        + " unfroze then burnt "
+                        + creature.description()
+                        + "\n"
+                    )
+                else:
+                    theGame().addMessage(
+                        "The attempt to burn "
+                        + creature.description()
+                        + " has been canceled by the freezing\n"
+                    )
+        else:
+            burn(creature, time_effect)
+
     elif isinstance(status, Paralysis):
-        paralysis(creature, time_effect)
+        if creature.hasStatus("paralysis"):
+            for status in creature.status:
+                if status._name == "paralysis":
+                    status._remaining_time = time_effect
+        else:
+            paralysis(creature, time_effect)
     elif isinstance(status, Freeze):
-        freeze(creature, time_effect)
+        if creature.hasStatus("burn"):
+            freezePower: int = random.randint(1, 20)
+            burnPower: int = random.randint(1, 20)
+            diff = freezePower - burnPower
+            if abs(diff) < 5:
+                creature.removeStatus("burn")
+                theGame().addMessage(
+                    "The attempt to freeze "
+                    + creature.description()
+                    + " unburnt "
+                    + creature.description()
+                    + "\n"
+                )
+            else:
+                if diff < 0:
+                    creature.removeStatus("burn")
+                    freeze(creature, time_effect)
+                    theGame().addMessage(
+                        "The attempt to freeze "
+                        + creature.description()
+                        + " unburnt then froze "
+                        + creature.description()
+                        + "\n"
+                    )
+                else:
+                    theGame().addMessage(
+                        "The attempt to freeze "
+                        + creature.description()
+                        + " has been canceled by the burning\n"
+                    )
+        else:
+            freeze(creature, time_effect)
 
 
 def burn(creature: "Creature", time_effect: int = 3) -> bool:
+    for status in creature.status:
+        if status._name == "burn":
+            status._remaining_time = time_effect
+            theGame().addMessage(
+                "\n" + creature._name + "'s burn cooldown has been set to maximum\n"
+            )
+            return True
     creature.status.append(Burn(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been burn\n")
     return True
@@ -105,6 +180,15 @@ def applyBurn(creature: "Creature") -> None:
 
 
 def paralysis(creature: "Creature", time_effect: int = 3) -> bool:
+    for status in creature.status:
+        if status._name == "paralysis":
+            status._remaining_time = time_effect
+            theGame().addMessage(
+                "\n"
+                + creature._name
+                + "'s paralysis cooldown has been set to maximum\n"
+            )
+            return True
     creature.status.append(Paralysis(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been paralysed\n")
     return True
@@ -115,6 +199,13 @@ def applyParalysis(creature: "Creature") -> None:
 
 
 def freeze(creature: "Creature", time_effect: int = 3) -> bool:
+    for status in creature.status:
+        if status._name == "freeze":
+            status._remaining_time = time_effect
+            theGame().addMessage(
+                "\n" + creature._name + "'s freeze cooldown has been set to maximum\n"
+            )
+            return True
     creature.status.append(Freeze(time_effect=time_effect))
     theGame().addMessage("\n" + creature._name + " has been frozen\n")
     return True
@@ -382,11 +473,16 @@ class Creature(Element):
             applyStatusEffect(self, other._status_applyable, other._time_effect)
         return self._hp <= 0
 
-    def hasStatus(self, status_name: str) -> bool:
+    def hasStatus(self, statusName: str) -> bool:
         for status in self.status:
-            if status._name == status_name:
+            if status._name == statusName:
                 return True
         return False
+
+    def removeStatus(self, statusName: str) -> None:
+        for status in self.status:
+            if status._name == statusName:
+                self.status.remove(status)
 
 
 class Archery(Creature):
@@ -421,7 +517,7 @@ class Hero(Creature):
     def __init__(
         self,
         name: str = "Hero",
-        hp: int = 10,
+        hp: int = 10000,
         abbrv: str = "@",
         strength: int = 2,
         defense: int = 0,
@@ -939,6 +1035,8 @@ class Game:
         "t": lambda hero: hero.toss(),
         # Montrer le lexique des actions
         "l": lambda hero: theGame().showActions(),
+        "o": lambda hero: applyStatusEffect(hero, Burn(), 3),
+        "p": lambda hero: applyStatusEffect(hero, Freeze(), 3),
     }
 
     def __init__(self, hero: Hero = Hero(), level: int = 1):
