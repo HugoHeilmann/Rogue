@@ -3,6 +3,7 @@ import copy
 import random
 from typing import Dict, List, Union
 
+from Maping.Color import getColor
 from Maping.Coord import Coord
 
 
@@ -14,7 +15,7 @@ class Element(metaclass=abc.ABCMeta):
             self._abbrv = self._name[0]
 
     def __repr__(self) -> str:
-        return self._abbrv
+        return getColor("white") + self._abbrv
 
     def description(self) -> str:
         return f"<{self._name}>"
@@ -154,11 +155,14 @@ class Equipment(Element):
         self._thrower = thrower
         self._requipable = requipable
 
+    def __repr__(self) -> str:
+        return getColor("yellow") + self._abbrv
+
     def description(self) -> str:
         return super().description() + f"({self._usefullPower})"
 
     def meet(self, hero: "Hero") -> bool:
-        theGame().addMessage("\nYou pick up a " + str(self._name))
+        theGame().addMessage("\nYou pick up a " + getColor("yellow") + str(self._name))
         hero.take(self)
         return True
 
@@ -332,6 +336,7 @@ class Creature(Element):
         time_effect: int = 3,
     ) -> None:
         Element.__init__(self, name, abbrv)
+        self._abbrv = self._abbrv
         self._hp = hp
         self._strength = strength
         self._defense = defense
@@ -340,6 +345,9 @@ class Creature(Element):
         self._probability = probability
         self._time_effect = time_effect
         self.status: List[Status] = []
+
+    def __repr__(self) -> str:
+        return getColor("red") + self._abbrv
 
     def description(self) -> str:
         return Element.description(self) + "(" + str(self._hp) + ")"
@@ -354,8 +362,21 @@ class Creature(Element):
         else:
             applyStatus: bool = False
         self._hp -= max(damageMin, damageCalculate)
+        if isinstance(self, Hero):
+            colorSelf: str = getColor("skyBlue")
+            colorOther: str = getColor("red")
+        else:
+            colorSelf: str = getColor("red")
+            colorOther: str = getColor("skyBlue")
         theGame().addMessage(
-            "\nThe " + str(other._name) + " hits the " + str(self.description())
+            "\nThe "
+            + colorOther
+            + str(other._name)
+            + getColor("white")
+            + " hits the "
+            + colorSelf
+            + str(self.description())
+            + getColor("white")
         )
         if applyStatus:
             applyStatusEffect(self, other._status_applyable, other._time_effect)
@@ -413,21 +434,38 @@ class Hero(Creature):
         self._requipment = requip
         self._inventory = []
 
+    def __repr__(self) -> str:
+        return getColor("skyBlue") + self._abbrv
+
     def description(self) -> str:
-        return (
-            Creature.description(self)
+        res: str = (
+            getColor("skyBlue")
+            + Creature.description(self)
             + "{"
             + str(self._mana)
             + "}"
-            + str(self._inventory)
         )
+        res += "["
+        for i in range(len(self._inventory)):
+            res += str(self._inventory[i])
+            if i != len(self._inventory) - 1:
+                res += getColor("skyBlue")
+                res += ", "
+        res += getColor("skyBlue") + "]"
+        return res
 
     def fullDescrition(self) -> str:
-        res: str = ""
+        res: str = getColor("white")
         dict = self.__dict__
         print("dict : ", dict)
         res += "> name : " + dict["_name"] + "\n"
-        res += "> abbrv : " + dict["_abbrv"] + "\n"
+        res += (
+            "> abbrv : "
+            + getColor("skyBlue")
+            + dict["_abbrv"]
+            + getColor("white")
+            + "\n"
+        )
         res += "> hp : " + str(dict["_hp"]) + "\n"
         res += "> strength : " + str(dict["_strength"]) + "\n"
         res += "> defense : " + str(dict["_defense"]) + "\n"
@@ -556,7 +594,7 @@ class Room:
 
 
 class Map:
-    ground = "."
+    ground = getColor("white") + "."
     empty = " "
     dir = {
         "z": Coord(0, -1),
@@ -946,10 +984,11 @@ class Game:
         self._message.append(msg)
 
     def readMessages(self) -> str:
-        msg: str = ""
+        msg: str = getColor("white")
         for message in self._message:
             msg += message
             msg += ". "
+        msg += getColor("white")
         self._message.clear()
         return msg
 
@@ -1048,8 +1087,11 @@ class Stairs(Element):
     def __init__(self, name="Stairs", abbrv="E") -> None:
         Element.__init__(self, name, abbrv)
 
+    def __repr__(self) -> str:
+        return getColor("green") + self._abbrv
+
     def meet(self, hero: Hero) -> bool:
-        theGame().addMessage(f"\n{hero._name} goes down")
+        theGame().addMessage(f"\n{getColor("green")}{hero._name} goes down")
         theGame()._level += 1
         if theGame()._level == 5:
             theGame().buildEndFloor()
@@ -1061,6 +1103,9 @@ class Stairs(Element):
 class MasterSword(Element):
     def __init__(self, name="Master Sword", abbrv="⚔") -> None:
         Element.__init__(self, name, abbrv)
+
+    def __repr__(self) -> str:
+        return getColor("purple") + self._abbrv
 
     def meet(self, hero: Hero) -> None:
         import sys
