@@ -495,6 +495,22 @@ class Creature(Element):
                 self.status.remove(status)
 
 
+class Invisible(Creature):
+    def __init__(
+        self,
+        name: str,
+        hp: int,
+        abbrv: str = ".",
+        strength: int = 1,
+        defense: int = 0,
+        speed: int = 1,
+    ) -> None:
+        Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+
+    def __repr__(self) -> str:
+        return getColor("white") + self._abbrv
+
+
 class Archery(Creature):
     def __init__(
         self,
@@ -1024,6 +1040,7 @@ class Game:
 
     monsters = {
         0: [
+            Invisible("Spectrum", 5, strength=2),
             Creature("Goblin", 4),
             Creature("Bat", 2, "W"),
             Archery("Archer", 6),
