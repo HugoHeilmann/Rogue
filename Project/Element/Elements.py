@@ -495,6 +495,22 @@ class Creature(Element):
                 self.status.remove(status)
 
 
+class Invisible(Creature):
+    def __init__(
+        self,
+        name: str,
+        hp: int,
+        abbrv: str = ".",
+        strength: int = 1,
+        defense: int = 0,
+        speed: int = 1,
+    ) -> None:
+        Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+
+    def __repr__(self) -> str:
+        return getColor("white") + self._abbrv
+
+
 class Archery(Creature):
     def __init__(
         self,
@@ -1028,9 +1044,14 @@ class Game:
             Creature("Bat", 2, "W"),
             Archery("Archer", 6),
         ],
-        1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
+        1: [
+            Creature("Ork", 6, strength=2),
+            Creature("Blob", 10),
+            Creature("Scorpius", 5, status_applyable=Paralysis()),
+        ],
         2: [
             Creature("Ice elementary", 3, "I", strength=1, status_applyable=Freeze()),
+            Invisible("Spectrum", 5, strength=2),
         ],
         5: [Creature("Dragon", 20, strength=3, status_applyable=Burn(), probability=5)],
     }
