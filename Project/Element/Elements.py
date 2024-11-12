@@ -1040,14 +1040,18 @@ class Game:
 
     monsters = {
         0: [
-            Invisible("Spectrum", 5, strength=2),
             Creature("Goblin", 4),
             Creature("Bat", 2, "W"),
             Archery("Archer", 6),
         ],
-        1: [Creature("Ork", 6, strength=2), Creature("Blob", 10)],
+        1: [
+            Creature("Ork", 6, strength=2),
+            Creature("Blob", 10),
+            Creature("Scorpius", 5, status_applyable=Paralysis()),
+        ],
         2: [
             Creature("Ice elementary", 3, "I", strength=1, status_applyable=Freeze()),
+            Invisible("Spectrum", 5, strength=2),
         ],
         5: [Creature("Dragon", 20, strength=3, status_applyable=Burn(), probability=5)],
     }
