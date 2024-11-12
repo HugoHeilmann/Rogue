@@ -239,6 +239,7 @@ class Equipment(Element):
         usefullPower: int = 1,
         thrower: bool = False,
         requipable: str = "",
+        unrequip=None,
     ) -> None:
         Element.__init__(self, name, abbrv)
         self._fullDescription = fullDescription
@@ -247,6 +248,7 @@ class Equipment(Element):
         self._usefullPower = usefullPower
         self._thrower = thrower
         self._requipable = requipable
+        self.unrequip = unrequip
 
     def __repr__(self) -> str:
         return getColor("yellow") + self._abbrv
@@ -417,7 +419,12 @@ class Requip:
                 theGame().addMessage(
                     f"\nYou've requiped {item.description()} instead of {self._requip[item._requipable].description()}"
                 )
+                theGame()._hero.take(self._requip[item._requipable])
+                self._requip[item._requipable].unrequip()
                 self._requip[item._requipable] = item
+            else:
+                theGame()._hero.take(item)
+                item.unrequip()
         else:
             self._requip[item._requipable] = item
             theGame().addMessage(f"\nYou've requiped {item.description()}")
@@ -547,7 +554,7 @@ class Hero(Creature):
         abbrv: str = "@",
         strength: int = 2,
         defense: int = 0,
-        speed: int = 2,
+        speed: int = 1,
         mana: int = 5,
         requip: Requip = Requip(),
     ) -> None:
@@ -959,59 +966,12 @@ class Game:
     equipments = {
         0: [
             Equipment(
-                "potion",
-                "!",
-                "A strange liquid, impossible to know its effects",
-                usage=lambda creature: heal(creature),
-            ),
-            Equipment(
-                "potion",
-                "!",
-                "A strange liquid, impossible to know its effects",
-                usage=lambda hero: manaHeal(hero),
-            ),
-            Equipment("gold", "o"),
-        ],
-        1: [
-            Equipment(
-                "sword",
-                fullDescription="A piece of requipment : <weapon>, it increases your strength",
-                usage=lambda creature: setStrength(creature, creature._strength + 1),
-                requipable="weapon",
-            ),
-            Equipment("light bow", "b", thrower=True, usage=lambda hero: hero.throw(1)),
-            Equipment(
-                "potion",
-                "!",
-                "A strange liquid, impossible to know its effects",
-                usage=lambda creature: teleport(creature, True),
-            ),
-            Equipment(
-                "potion",
-                "!",
-                "A strange liquid, impossible to know its effects",
-                usage=lambda creature: burn(creature),
-            ),
-            Equipment(
-                "potion",
-                "!",
-                "A strange liquid, impossible to know its effects",
-                usage=lambda creature: paralysis(creature),
-            ),
-        ],
-        2: [
-            Equipment(
-                "chainmail",
-                fullDescription="A piece of requipment : <armor>, it increases your defense",
-                usage=lambda creature: setDefense(creature, creature._defense + 1),
-                requipable="armor",
-            ),
-            Equipment(
-                "iron helmet",
-                "h",
-                "A piece of requipment : <helmet>, it increases your defense",
-                usage=lambda creature: setDefense(creature, creature._defense + 1),
-                requipable="helmet",
+                "nimbus 2000",
+                "→",
+                "A piece of requipment : <shoes>, it increases your speed",
+                usage=lambda creature: setSpeed(creature, creature._speed + 1),
+                requipable="shoes",
+                unrequip=lambda: setSpeed(theGame()._hero, theGame()._hero._speed - 1),
             ),
             Equipment(
                 "spike shoes",
@@ -1019,7 +979,74 @@ class Game:
                 "A piece of requipment : <shoes>, it increases your strength",
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="shoes",
+                unrequip=lambda: setStrength(
+                    theGame()._hero, theGame()._hero._strength - 1
+                ),
             ),
+            # Equipment(
+            #    "potion",
+            #    "!",
+            #    "A strange liquid, impossible to know its effects",
+            #    usage=lambda creature: heal(creature),
+            # ),
+            # Equipment(
+            #    "potion",
+            #    "!",
+            #    "A strange liquid, impossible to know its effects",
+            #    usage=lambda hero: manaHeal(hero),
+            # ),
+            # Equipment("gold", "o"),
+        ],
+        1: [
+            Equipment(
+                "sword",
+                fullDescription="A piece of requipment : <weapon>, it increases your strength",
+                usage=lambda creature: setStrength(creature, creature._strength + 1),
+                requipable="weapon",
+                unrequip=lambda: setStrength(
+                    theGame()._hero, theGame()._hero._strength - 1
+                ),
+            ),
+            # Equipment("light bow", "b", thrower=True, usage=lambda hero: hero.throw(1)),
+            # Equipment(
+            #    "potion",
+            #    "!",
+            #    "A strange liquid, impossible to know its effects",
+            #    usage=lambda creature: teleport(creature, True),
+            # ),
+            # Equipment(
+            #    "potion",
+            #    "!",
+            #    "A strange liquid, impossible to know its effects",
+            #    usage=lambda creature: burn(creature),
+            # ),
+            # Equipment(
+            #    "potion",
+            #    "!",
+            #    "A strange liquid, impossible to know its effects",
+            #    usage=lambda creature: paralysis(creature),
+            # ),
+        ],
+        2: [
+            # Equipment(
+            #    "chainmail",
+            #    fullDescription="A piece of requipment : <armor>, it increases your defense",
+            #    usage=lambda creature: setDefense(creature, creature._defense + 1),
+            #    requipable="armor",
+            #    unrequip=lambda: setDefense(
+            #        theGame()._hero, theGame()._hero._defense - 1
+            #    ),
+            # ),
+            # Equipment(
+            #    "iron helmet",
+            #    "h",
+            #    "A piece of requipment : <helmet>, it increases your defense",
+            #    usage=lambda creature: setDefense(creature, creature._defense + 1),
+            #    requipable="helmet",
+            #    unrequip=lambda: setDefense(
+            #        theGame()._hero, theGame()._hero._defense - 1
+            #    ),
+            # ),
             Equipment(
                 "potion",
                 "!",
@@ -1033,13 +1060,6 @@ class Game:
                 "w",
                 "A pocket teleporter with infinite use",
                 usage=lambda creature: teleport(creature, False),
-            ),
-            Equipment(
-                "nimbus 2000",
-                "→",
-                "A piece of requipment : <shoes>, it increases your speed",
-                usage=lambda creature: setSpeed(creature, creature._speed + 1),
-                requipable="shoes",
             ),
         ],
     }
