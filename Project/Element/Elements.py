@@ -22,8 +22,8 @@ def manaHeal(hero: "Hero", power: int = 3) -> bool:
 
 
 def hyperBeam(hero: "Hero", power: int) -> bool:
-    direction: Coord = theGame().selectCoord(Map.dir_arrow)
-    location = theGame()._floor.pos(hero) + direction
+    way: Coord = theGame().selectCoord(Map.dir_arrow)
+    location = theGame()._floor.pos(hero) + way
     while location in theGame()._floor and theGame()._floor.get(location) != Map.empty:
         c = theGame()._floor.get(location)
         if isinstance(c, Creature):
@@ -32,16 +32,16 @@ def hyperBeam(hero: "Hero", power: int) -> bool:
             theGame().addMessage("\nThe <final spark> hits the " + c.description())
             if c._hp <= 0:
                 theGame()._floor.rm(location)
-        location += direction
+        location += way
     return True
 
 
 def glacialStorm(hero: "Hero", power: int) -> bool:
-    position: Coord = theGame()._floor.pos(hero)
+    pos: Coord = theGame()._floor.pos(hero)
 
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
-            new_pos: Coord = Coord(position.x + dx, position.y + dy)
+            new_pos: Coord = Coord(pos.x + dx, pos.y + dy)
             c = theGame()._floor.get(new_pos)
             if (
                 new_pos in theGame()._floor
@@ -236,10 +236,6 @@ def getColor(color: str) -> str:
         colour: str = "05"
     elif color == "skyBlue":
         colour: str = "06"
-    elif color == "gray":
-        colour: str = "08"
-    elif color == "lightred":
-        colour: str = "09"
     else:
         colour: str = "07"  # white
     return base + colour + end
@@ -334,7 +330,7 @@ class Stairs(Element):
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage(f"\n{getColor("green")}{hero._name} goes down")
         theGame()._level += 1
-        if theGame()._level == 5:
+        if theGame()._level == 2:
             theGame().buildEndFloor()
         else:
             theGame().buildFloor()
@@ -345,7 +341,7 @@ class Stairs(Element):
 
 
 class MasterSword(Element):
-    def __init__(self, name="Master Sword", abbrv="⚔") -> None:
+    def __init__(self, name="Master Sword", abbrv="¥") -> None:
         Element.__init__(self, name, abbrv)
 
     def __repr__(self) -> str:
@@ -575,12 +571,11 @@ class Invisible(Creature):
         self,
         name: str,
         hp: int,
-        abbrv: str = ".",
         strength: int = 1,
         defense: int = 0,
         speed: int = 1,
     ) -> None:
-        Creature.__init__(self, name, hp, abbrv, strength, defense, speed)
+        Creature.__init__(self, name, hp, ".", strength, defense, speed)
 
     def __repr__(self) -> str:
         return getColor("white") + self._abbrv
@@ -716,14 +711,14 @@ class Hero(Creature):
         item._strength += thrower_strength
         if not type(item) == Equipment:
             return None
-        direction: Coord = theGame().selectCoord(Map.dir_arrow)
-        location = theGame()._floor.pos(self) + direction
+        way: Coord = theGame().selectCoord(Map.dir_arrow)
+        location = theGame()._floor.pos(self) + way
         for _ in range(3 + thrower_strength):
             if (
                 location in theGame()._floor
                 and theGame()._floor.get(location) == Map.ground
             ):
-                location += direction
+                location += way
         if location in theGame()._floor and isinstance(
             theGame()._floor.get(location), Creature
         ):
@@ -1438,15 +1433,48 @@ class Game:
 
         self.buildFloor()
         print(
-            "\n----------------------------- Welcome Hero! -----------------------------"
+            "\n----------------------------- Welcome "
+            + getColor("skyBlue")
+            + "Hero"
+            + getColor("white")
+            + "! -----------------------------"
         )
         print(
-            "\nYour objective is to find the legendary Master Sword hidden in the dungeon"
+            "\nYour objective is to find the legendary "
+            + getColor("purple")
+            + "Master Sword"
+            + getColor("white")
+            + " hidden in the dungeon\n"
         )
-        print("However, the monsters are here to keep you from touching it")
-        print("Use the character l to see your potential of actions")
-        print("Don't worry, monsters won't approch you while you read the lexical ;)")
-        print("Use the character c to begin your adventure !")
+        print(
+            "However, the "
+            + getColor("red")
+            + "monsters"
+            + getColor("white")
+            + " are here to keep you from touching it"
+        )
+        print(
+            "Use the character "
+            + getColor("marineBlue")
+            + "l"
+            + getColor("white")
+            + " to see your potential of actions"
+        )
+        print(
+            "Don't worry, "
+            + getColor("red")
+            + "monsters"
+            + getColor("white")
+            + " won't approch you while you read the lexical ;)\n"
+        )
+        print(
+            getColor("green")
+            + "Use the character"
+            + getColor("marineBlue")
+            + " c"
+            + getColor("white")
+            + " to begin your adventure !"
+        )
         continu: bool = False
         while not continu:
             c = getch()
@@ -1471,7 +1499,7 @@ class Game:
                     else:
                         Game._actions[c](self._hero)
                     if (
-                        # Actions qui ne font pas perdre de tour
+                        # Actions which does not waste your turn
                         c == "k"
                         or c == "l"
                         or c == "o"
@@ -1487,7 +1515,9 @@ class Game:
         print("--- Game Over ---")
 
 
+########################################################################################################################################################
 ################################################################### System functions ###################################################################
+########################################################################################################################################################
 
 
 def theGame(game=Game()):
