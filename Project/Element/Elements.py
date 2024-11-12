@@ -547,7 +547,7 @@ class Hero(Creature):
         abbrv: str = "@",
         strength: int = 2,
         defense: int = 0,
-        speed: int = 1,
+        speed: int = 2,
         mana: int = 5,
         requip: Requip = Requip(),
     ) -> None:
@@ -626,17 +626,23 @@ class Hero(Creature):
         if Equipment.use(item, self):
             self._inventory.remove(item)
 
-    def throw(self) -> None:
-        item: Equipment = theGame().select(self._inventory)
+    def throw(self, thrower_strength: int = 0) -> None:
+        inventory: List[Equipment] = self._inventory
+        for item in inventory:
+            if item._thrower:
+                inventory.remove(item)
+        item: Equipment = theGame().select(inventory)
+        item._strength += thrower_strength
         if not type(item) == Equipment:
             return None
         direction: Coord = theGame().selectCoord(Map.dir_arrow)
         location = theGame()._floor.pos(self) + direction
-        while (
-            location in theGame()._floor
-            and theGame()._floor.get(location) == Map.ground
-        ):
-            location += direction
+        for _ in range(3 + thrower_strength):
+            if (
+                location in theGame()._floor
+                and theGame()._floor.get(location) == Map.ground
+            ):
+                location += direction
         if location in theGame()._floor and isinstance(
             theGame()._floor.get(location), Creature
         ):
@@ -973,7 +979,7 @@ class Game:
                 usage=lambda creature: setStrength(creature, creature._strength + 1),
                 requipable="weapon",
             ),
-            Equipment("light bow", "b", thrower=True),
+            Equipment("light bow", "b", thrower=True, usage=lambda hero: hero.throw(1)),
             Equipment(
                 "potion",
                 "!",
