@@ -1,31 +1,16 @@
 import abc
 import copy
+import math
 import random
 from typing import Dict, List, Union
 
-from Maping.Color import getColor
-from Maping.Coord import Coord
+#########################################################################################################################################################
+################################################################### Usefull functions ###################################################################
+#########################################################################################################################################################
+
+######################################################################### Magic #########################################################################
 
 
-class Element(metaclass=abc.ABCMeta):
-    def __init__(self, _name: str, _abbrv: str = ""):
-        self._name = _name
-        self._abbrv = _abbrv
-        if self._abbrv == "":
-            self._abbrv = self._name[0]
-
-    def __repr__(self) -> str:
-        return getColor("white") + self._abbrv
-
-    def description(self) -> str:
-        return f"<{self._name}>"
-
-    @abc.abstractmethod
-    def meet(self, hero: "Hero") -> bool:
-        raise NotImplementedError("Abstract method")
-
-
-# Magic
 def heal(creature: "Creature", power: int = 3) -> bool:
     creature._hp += power
     return True
@@ -83,7 +68,9 @@ def teleport(creature: "Creature", unique):
     return unique
 
 
-# Status
+######################################################################### Status #########################################################################
+
+
 def applyStatusEffect(creature: "Creature", status: "Status", time_effect: int) -> None:
     if isinstance(status, Burn):
         if creature.hasStatus("freeze"):
@@ -215,6 +202,9 @@ def applyFreeze(creature: "Creature") -> bool:
     theGame().addMessage("\n" + creature._name + " is frozen\n")
 
 
+######################################################################### Requip #########################################################################
+
+
 def setStrength(creature: "Creature", strength: int) -> bool:
     creature._strength = strength
     return True
@@ -226,6 +216,150 @@ def setDefense(creature: "Creature", defense: int):
 
 def setSpeed(creature: "Creature", speed: int):
     creature._speed = speed
+
+
+######################################################################### Colors #########################################################################
+
+
+def getColor(color: str) -> str:
+    base: str = "\033[38;5;"
+    end: str = "m"
+    if color == "red":
+        colour: str = "01"
+    elif color == "green":
+        colour: str = "02"
+    elif color == "yellow":
+        colour: str = "03"
+    elif color == "marineBlue":
+        colour: str = "04"
+    elif color == "purple":
+        colour: str = "05"
+    elif color == "skyBlue":
+        colour: str = "06"
+    elif color == "gray":
+        colour: str = "08"
+    elif color == "lightred":
+        colour: str = "09"
+    else:
+        colour: str = "07"  # white
+    return base + colour + end
+
+
+###########################################################################################################################################################
+######################################################################### Classes #########################################################################
+###########################################################################################################################################################
+
+########################################################################## Coord ##########################################################################
+
+
+class Coord:
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other: "Coord") -> bool:
+        return self.x == other.x and self.y == other.y
+
+    def __add__(self, other: "Coord") -> "Coord":
+        return Coord(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: "Coord") -> "Coord":
+        return Coord(self.x - other.x, self.y - other.y)
+
+    def __repr__(self) -> str:
+        return f"<{self.x},{self.y}>"
+
+    def distance(self, other: "Coord") -> int:
+        sqrx: int = math.pow((other.x - self.x), 2)
+        sqry: int = math.pow((other.y - self.y), 2)
+        return math.sqrt(sqrx + sqry)
+
+    def direction(self, other: "Coord") -> "Coord":
+        diff: Coord = other - self
+        dist = self.distance(other)
+
+        if dist == 0:
+            return Coord(0, 0)
+
+        norm_x = diff.x / dist
+        norm_y = diff.y / dist
+
+        direction_x = 0
+        direction_y = 0
+
+        if norm_x > 0:
+            direction_x = 1
+        elif norm_x < 0:
+            direction_x = -1
+
+        if norm_y > 0:
+            direction_y = 1
+        elif norm_y < 0:
+            direction_y = -1
+
+        return Coord(direction_x, direction_y)
+
+
+######################################################################### Element #########################################################################
+
+
+class Element(metaclass=abc.ABCMeta):
+    def __init__(self, _name: str, _abbrv: str = ""):
+        self._name = _name
+        self._abbrv = _abbrv
+        if self._abbrv == "":
+            self._abbrv = self._name[0]
+
+    def __repr__(self) -> str:
+        return getColor("white") + self._abbrv
+
+    def description(self) -> str:
+        return f"<{self._name}>"
+
+    @abc.abstractmethod
+    def meet(self, hero: "Hero") -> bool:
+        raise NotImplementedError("Abstract method")
+
+
+############################################################################ Stairs ############################################################################
+
+
+class Stairs(Element):
+    def __init__(self, name="Stairs", abbrv="E") -> None:
+        Element.__init__(self, name, abbrv)
+
+    def __repr__(self) -> str:
+        return getColor("green") + self._abbrv
+
+    def meet(self, hero: "Hero") -> bool:
+        theGame().addMessage(f"\n{getColor("green")}{hero._name} goes down")
+        theGame()._level += 1
+        if theGame()._level == 5:
+            theGame().buildEndFloor()
+        else:
+            theGame().buildFloor()
+        return True
+
+
+########################################################################## MasterSword ##########################################################################
+
+
+class MasterSword(Element):
+    def __init__(self, name="Master Sword", abbrv="⚔") -> None:
+        Element.__init__(self, name, abbrv)
+
+    def __repr__(self) -> str:
+        return getColor("purple") + self._abbrv
+
+    def meet(self, hero: "Hero") -> None:
+        import sys
+
+        print("Congratulation Hero, you've retrieved the legendary Master Sword !")
+        print("\n--- You won ! ---")
+        sys.exit()
+
+
+######################################################################### Equipment #########################################################################
 
 
 class Equipment(Element):
@@ -276,117 +410,7 @@ class Equipment(Element):
             return False
 
 
-class Spell:
-    def __init__(
-        self,
-        name: str,
-        fullDescription: str,
-        cost: int = 1,
-        power: int = 3,
-        usage=None,
-    ):
-        self._name = name
-        self._fullDescription = fullDescription
-        self._cost = cost
-        self._power = power
-        self.usage = usage
-
-    def description(self) -> str:
-        return f"<{self._name}>({self._cost})[{self._power}]"
-
-    def use(self, hero: "Hero"):
-        if self.usage != None:
-            if hero._mana >= self._cost:
-                theGame().addMessage("\nYou use the spell " + self.description())
-                hero._mana -= self._cost
-                return self.usage(hero, self._power)
-            else:
-                theGame().addMessage(
-                    "\nYou don't have enough mana to use the spell "
-                    + self.description()
-                )
-                return False
-        else:
-            theGame().addMessage("\nThe spell " + self._name + " is not usable")
-            return False
-
-
-class Status:
-    def __init__(self, name: str, time_effect: int, usage=None):
-        self._name = name
-        self._time_effect = time_effect
-        self.usage = usage
-        self._remaining_time = time_effect
-
-    @abc.abstractmethod
-    def turn_effect(self, creature: "Creature") -> bool:
-        raise NotImplementedError("Abstract method")
-
-    @abc.abstractmethod
-    def end(self, creature: "Creature") -> None:
-        raise NotImplementedError("Abstract method")
-
-
-class Burn(Status):
-    def __init__(self, time_effect: int = 3) -> None:
-        Status.__init__(
-            self,
-            "burn",
-            time_effect=time_effect,
-            usage=lambda creature: applyBurn(creature),
-        )
-
-    def turn_effect(self, creature: "Creature") -> bool:
-        self.usage(creature)
-        self._remaining_time -= 1
-        if self._remaining_time == 0:
-            self.end(creature)
-        return self._remaining_time == 0
-
-    def end(self, creature: "Creature") -> None:
-        theGame().addMessage(creature._name + " isn't burn anymore\n")
-        creature.status.remove(self)
-
-
-class Paralysis(Status):
-    def __init__(self, time_effect: int = 3) -> None:
-        Status.__init__(
-            self,
-            "paralysis",
-            time_effect=time_effect,
-            usage=lambda creature: applyParalysis(creature),
-        )
-
-    def turn_effect(self, creature: "Creature") -> bool:
-        self.usage(creature)
-        self._remaining_time -= 1
-        if self._remaining_time == 0:
-            self.end(creature)
-        return self._remaining_time == 0
-
-    def end(self, creature: "Creature") -> None:
-        theGame().addMessage(creature._name + " isn't paralysed anymore\n")
-        creature.status.remove(self)
-
-
-class Freeze(Status):
-    def __init__(self, time_effect: int = 3) -> None:
-        Status.__init__(
-            self,
-            "freeze",
-            time_effect=time_effect,
-            usage=lambda creature: applyFreeze(creature),
-        )
-
-    def turn_effect(self, creature: "Creature") -> bool:
-        self._remaining_time -= 1
-        if self._remaining_time == 0:
-            self.end(creature)
-        return self._remaining_time == 0
-
-    def end(self, creature: "Creature") -> None:
-        theGame().addMessage(creature._name + " isn't frozen anymore\n")
-        creature.status.remove(self)
+######################################################################### Requip #########################################################################
 
 
 class Requip:
@@ -430,6 +454,47 @@ class Requip:
             theGame().addMessage(f"\nYou've requiped {item.description()}")
 
 
+######################################################################### Spell #########################################################################
+
+
+class Spell:
+    def __init__(
+        self,
+        name: str,
+        fullDescription: str,
+        cost: int = 1,
+        power: int = 3,
+        usage=None,
+    ):
+        self._name = name
+        self._fullDescription = fullDescription
+        self._cost = cost
+        self._power = power
+        self.usage = usage
+
+    def description(self) -> str:
+        return f"<{self._name}>({self._cost})[{self._power}]"
+
+    def use(self, hero: "Hero"):
+        if self.usage != None:
+            if hero._mana >= self._cost:
+                theGame().addMessage("\nYou use the spell " + self.description())
+                hero._mana -= self._cost
+                return self.usage(hero, self._power)
+            else:
+                theGame().addMessage(
+                    "\nYou don't have enough mana to use the spell "
+                    + self.description()
+                )
+                return False
+        else:
+            theGame().addMessage("\nThe spell " + self._name + " is not usable")
+            return False
+
+
+######################################################################### Creature #########################################################################
+
+
 class Creature(Element):
     def __init__(
         self,
@@ -439,7 +504,7 @@ class Creature(Element):
         strength: int = 1,
         defense: int = 0,
         speed: int = 1,
-        status_applyable: Status = None,
+        status_applyable: "Status" = None,
         probability: int = 10,
         time_effect: int = 3,
     ) -> None:
@@ -502,6 +567,9 @@ class Creature(Element):
                 self.status.remove(status)
 
 
+######################################################################### Invisible #########################################################################
+
+
 class Invisible(Creature):
     def __init__(
         self,
@@ -516,6 +584,9 @@ class Invisible(Creature):
 
     def __repr__(self) -> str:
         return getColor("white") + self._abbrv
+
+
+######################################################################### Archery #########################################################################
 
 
 class Archery(Creature):
@@ -544,6 +615,9 @@ class Archery(Creature):
             theGame()._floor.get(location), Hero
         ):
             theGame()._hero.meet(self)
+
+
+############################################################################ Hero ############################################################################
 
 
 class Hero(Creature):
@@ -683,6 +757,99 @@ class Hero(Creature):
         return False
 
 
+######################################################################### Status #########################################################################
+
+
+class Status:
+    def __init__(self, name: str, time_effect: int, usage=None):
+        self._name = name
+        self._time_effect = time_effect
+        self.usage = usage
+        self._remaining_time = time_effect
+
+    @abc.abstractmethod
+    def turn_effect(self, creature: Creature) -> bool:
+        raise NotImplementedError("Abstract method")
+
+    @abc.abstractmethod
+    def end(self, creature: Creature) -> None:
+        raise NotImplementedError("Abstract method")
+
+
+######################################################################### Burn #########################################################################
+
+
+class Burn(Status):
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "burn",
+            time_effect=time_effect,
+            usage=lambda creature: applyBurn(creature),
+        )
+
+    def turn_effect(self, creature: Creature) -> bool:
+        self.usage(creature)
+        self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
+        return self._remaining_time == 0
+
+    def end(self, creature: Creature) -> None:
+        theGame().addMessage(creature._name + " isn't burn anymore\n")
+        creature.status.remove(self)
+
+
+######################################################################### Paralysis #########################################################################
+
+
+class Paralysis(Status):
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "paralysis",
+            time_effect=time_effect,
+            usage=lambda creature: applyParalysis(creature),
+        )
+
+    def turn_effect(self, creature: Creature) -> bool:
+        self.usage(creature)
+        self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
+        return self._remaining_time == 0
+
+    def end(self, creature: Creature) -> None:
+        theGame().addMessage(creature._name + " isn't paralysed anymore\n")
+        creature.status.remove(self)
+
+
+########################################################################### Freeze ###########################################################################
+
+
+class Freeze(Status):
+    def __init__(self, time_effect: int = 3) -> None:
+        Status.__init__(
+            self,
+            "freeze",
+            time_effect=time_effect,
+            usage=lambda creature: applyFreeze(creature),
+        )
+
+    def turn_effect(self, creature: Creature) -> bool:
+        self._remaining_time -= 1
+        if self._remaining_time == 0:
+            self.end(creature)
+        return self._remaining_time == 0
+
+    def end(self, creature: Creature) -> None:
+        theGame().addMessage(creature._name + " isn't frozen anymore\n")
+        creature.status.remove(self)
+
+
+############################################################################ Room ############################################################################
+
+
 class Room:
     def __init__(self, c1: Coord, c2: Coord) -> None:
         self._c1 = c1
@@ -739,6 +906,9 @@ class Room:
         cma: Coord = self.randEmptyCoord(map)
         ma: Creature = theGame().randMonster()
         map.put(cma, ma)
+
+
+############################################################################# Map #############################################################################
 
 
 class Map:
@@ -962,9 +1132,55 @@ class Map:
                             self.move(elem, Coord.direction(badGuy, target))
 
 
+############################################################################ Game ############################################################################
+
+
 class Game:
     equipments = {
         0: [
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: heal(creature),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda hero: manaHeal(hero),
+            ),
+            Equipment("gold", "o"),
+        ],
+        1: [
+            Equipment(
+                "sword",
+                fullDescription="A piece of requipment : <weapon>, it increases your strength",
+                usage=lambda creature: setStrength(creature, creature._strength + 1),
+                requipable="weapon",
+                unrequip=lambda: setStrength(
+                    theGame()._hero, theGame()._hero._strength - 1
+                ),
+            ),
+            Equipment("light bow", "b", thrower=True, usage=lambda hero: hero.throw(1)),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: teleport(creature, True),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: burn(creature),
+            ),
+            Equipment(
+                "potion",
+                "!",
+                "A strange liquid, impossible to know its effects",
+                usage=lambda creature: paralysis(creature),
+            ),
             Equipment(
                 "nimbus 2000",
                 "→",
@@ -983,70 +1199,27 @@ class Game:
                     theGame()._hero, theGame()._hero._strength - 1
                 ),
             ),
-            # Equipment(
-            #    "potion",
-            #    "!",
-            #    "A strange liquid, impossible to know its effects",
-            #    usage=lambda creature: heal(creature),
-            # ),
-            # Equipment(
-            #    "potion",
-            #    "!",
-            #    "A strange liquid, impossible to know its effects",
-            #    usage=lambda hero: manaHeal(hero),
-            # ),
-            # Equipment("gold", "o"),
-        ],
-        1: [
-            Equipment(
-                "sword",
-                fullDescription="A piece of requipment : <weapon>, it increases your strength",
-                usage=lambda creature: setStrength(creature, creature._strength + 1),
-                requipable="weapon",
-                unrequip=lambda: setStrength(
-                    theGame()._hero, theGame()._hero._strength - 1
-                ),
-            ),
-            # Equipment("light bow", "b", thrower=True, usage=lambda hero: hero.throw(1)),
-            # Equipment(
-            #    "potion",
-            #    "!",
-            #    "A strange liquid, impossible to know its effects",
-            #    usage=lambda creature: teleport(creature, True),
-            # ),
-            # Equipment(
-            #    "potion",
-            #    "!",
-            #    "A strange liquid, impossible to know its effects",
-            #    usage=lambda creature: burn(creature),
-            # ),
-            # Equipment(
-            #    "potion",
-            #    "!",
-            #    "A strange liquid, impossible to know its effects",
-            #    usage=lambda creature: paralysis(creature),
-            # ),
         ],
         2: [
-            # Equipment(
-            #    "chainmail",
-            #    fullDescription="A piece of requipment : <armor>, it increases your defense",
-            #    usage=lambda creature: setDefense(creature, creature._defense + 1),
-            #    requipable="armor",
-            #    unrequip=lambda: setDefense(
-            #        theGame()._hero, theGame()._hero._defense - 1
-            #    ),
-            # ),
-            # Equipment(
-            #    "iron helmet",
-            #    "h",
-            #    "A piece of requipment : <helmet>, it increases your defense",
-            #    usage=lambda creature: setDefense(creature, creature._defense + 1),
-            #    requipable="helmet",
-            #    unrequip=lambda: setDefense(
-            #        theGame()._hero, theGame()._hero._defense - 1
-            #    ),
-            # ),
+            Equipment(
+                "chainmail",
+                fullDescription="A piece of requipment : <armor>, it increases your defense",
+                usage=lambda creature: setDefense(creature, creature._defense + 1),
+                requipable="armor",
+                unrequip=lambda: setDefense(
+                    theGame()._hero, theGame()._hero._defense - 1
+                ),
+            ),
+            Equipment(
+                "iron helmet",
+                "h",
+                "A piece of requipment : <helmet>, it increases your defense",
+                usage=lambda creature: setDefense(creature, creature._defense + 1),
+                requipable="helmet",
+                unrequip=lambda: setDefense(
+                    theGame()._hero, theGame()._hero._defense - 1
+                ),
+            ),
             Equipment(
                 "potion",
                 "!",
@@ -1314,36 +1487,7 @@ class Game:
         print("--- Game Over ---")
 
 
-class Stairs(Element):
-    def __init__(self, name="Stairs", abbrv="E") -> None:
-        Element.__init__(self, name, abbrv)
-
-    def __repr__(self) -> str:
-        return getColor("green") + self._abbrv
-
-    def meet(self, hero: Hero) -> bool:
-        theGame().addMessage(f"\n{getColor("green")}{hero._name} goes down")
-        theGame()._level += 1
-        if theGame()._level == 5:
-            theGame().buildEndFloor()
-        else:
-            theGame().buildFloor()
-        return True
-
-
-class MasterSword(Element):
-    def __init__(self, name="Master Sword", abbrv="⚔") -> None:
-        Element.__init__(self, name, abbrv)
-
-    def __repr__(self) -> str:
-        return getColor("purple") + self._abbrv
-
-    def meet(self, hero: Hero) -> None:
-        import sys
-
-        print("Congratulation Hero, you've retrieved the legendary Master Sword !")
-        print("\n--- You won ! ---")
-        sys.exit()
+################################################################### System functions ###################################################################
 
 
 def theGame(game=Game()):
@@ -1355,7 +1499,7 @@ import msvcrt
 
 def getch():
     ch = msvcrt.getch()
-    while ch == b"\xe0" or ch == b"\x00":  # touche spéciale (flèches, etc...)
+    while ch == b"\xe0" or ch == b"\x00":  # special characters (arrows, etc...)
         ch = msvcrt.getch()
 
     try:
