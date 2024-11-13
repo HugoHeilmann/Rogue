@@ -4,14 +4,14 @@
 
 A Roguelike game in which the player explores randomly generated dungeons, fights monsters, collects items, equips gear, and uses magic with the goal of retrieving the Legendary Master Sword hidden in the dungeon.
 
-## Caractéristiques principales
+## Main features
 
 - **Random level generation** : Each floor of the dungeon is randomly generated with increasingly stronger enemies.</br>
 - **Turn-based combat** : A turn-based combat system where actions are determined by the speed of the hero and the monsters.</br>
 - **Hero versatility** : The player can choose to play in different ways, whether by fleeing, fighting, attacking close or ranged, using magic, and more.</br>
 - **Permadeath** : Each death is permanent, encouraging the player to be strategic.
 
-## Technologies utilisées
+## Technologies used
 
 - **Language** : `Python`</br>
 - **Librairies** : `abc`, `copy`, `math`, `random`, `typing`, `sys`, `os`, `msvcrt`
@@ -42,7 +42,7 @@ A Roguelike game in which the player explores randomly generated dungeons, fight
     python3 rogue.py
     ```
 
-## Utilisation
+## Usage
 
 - Lateral movements : <span style="color:#FFD700">z</span>(↑), <span style="color:#FFD700">q</span>(←), <span style="color:#FFD700">s</span>(↓), <span style="color:#FFD700">d</span>(→)</br>
 - Diagonal movements : <span style="color:#FFD700">a</span>(↖), <span style="color:#FFD700">e</span>(↗), <span style="color:#FFD700">w</span>(↙), <span style="color:#FFD700">c</span>(↘)</br>
@@ -57,6 +57,6 @@ A Roguelike game in which the player explores randomly generated dungeons, fight
 - Do nothing : <span style="color:#FFD700">x</span></br>
 - Kill yourself : <span style="color:#FFD700">k</span>
 
-## Auteur
+## Author
 
 **Hugo Heilmann, IT student, Polytech' Nice-Sophia**
