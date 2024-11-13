@@ -1,0 +1,14 @@
+name: Close PRs
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  close-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close pull request
+        uses: peter-evans/close-pull-request@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
