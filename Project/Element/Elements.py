@@ -330,7 +330,7 @@ class Stairs(Element):
     def meet(self, hero: "Hero") -> bool:
         theGame().addMessage(f"\n{getColor("green")}{hero._name} goes down")
         theGame()._level += 1
-        if theGame()._level == 2:
+        if theGame()._level == 20:
             theGame().buildEndFloor()
         else:
             theGame().buildFloor()
